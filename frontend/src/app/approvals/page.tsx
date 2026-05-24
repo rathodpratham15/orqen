@@ -108,7 +108,7 @@ function ApprovalCard({
       {/* Message */}
       <div className="px-5 py-4">
         <p className="text-sm text-zinc-300 leading-relaxed">{approval.message}</p>
-        {approval.context?.summary && (
+        {approval.context?.summary != null && (
           <div className="mt-3 px-3 py-2.5 rounded-lg bg-[#1a1a2e] border border-[#2a2a40]">
             <p className="text-xs text-zinc-400 leading-relaxed">
               {String(approval.context.summary)}

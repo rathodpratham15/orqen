@@ -15,6 +15,8 @@ from .approval_node import ApprovalNode
 from .slack_node import SlackNode
 from .email_node import EmailNode
 from .code_node import CodeNode
+from .agent_node import AgentNode
+from .memory_node import MemoryNode
 
 NODE_REGISTRY: dict[str, type[BaseNode]] = {
     "llm":       LLMNode,
@@ -24,6 +26,8 @@ NODE_REGISTRY: dict[str, type[BaseNode]] = {
     "slack":     SlackNode,
     "email":     EmailNode,
     "code":      CodeNode,
+    "agent":     AgentNode,
+    "memory":    MemoryNode,
 }
 
 __all__ = [
@@ -38,4 +42,6 @@ __all__ = [
     "SlackNode",
     "EmailNode",
     "CodeNode",
+    "AgentNode",
+    "MemoryNode",
 ]

@@ -1,4 +1,4 @@
-from .workflow import Workflow, WorkflowRun, NodeExecution, ApprovalRequest, WorkflowSchedule
+from .workflow import Workflow, WorkflowRun, NodeExecution, ApprovalRequest, WorkflowSchedule, AgentMemory
 
 __all__ = [
     "Workflow",
@@ -6,4 +6,5 @@ __all__ = [
     "NodeExecution",
     "ApprovalRequest",
     "WorkflowSchedule",
+    "AgentMemory",
 ]

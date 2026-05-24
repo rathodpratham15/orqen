@@ -73,6 +73,8 @@ const DEFAULT_CONFIGS: Record<NodeType, NodeConfig> = {
   slack:     { webhook_url: "", text: "", username: "Orqen", icon_emoji: ":robot_face:" },
   email:     { to: "", subject: "", body: "", from_name: "Orqen" },
   code:      { code: "# Access prior node outputs via `inputs` dict\n# e.g. text = inputs.get('llm_node', {}).get('text', '')\n\nresult = inputs", timeout: 10 },
+  agent:     { goal: "", system_prompt: "You are a capable AI agent. Think step by step.", model: "claude-sonnet-4-6", max_iterations: 10, max_tokens: 4096, available_tools: ["http_request", "run_python"], inject_context: true },
+  memory:    { operation: "search", collection: "default", query: "", top_k: 5 },
 };
 
 const DEFAULT_LABELS: Record<NodeType, string> = {
@@ -83,6 +85,8 @@ const DEFAULT_LABELS: Record<NodeType, string> = {
   slack:     "Slack",
   email:     "Email",
   code:      "Code",
+  agent:     "AI Agent",
+  memory:    "Memory",
 };
 
 let _nodeCounter = 1;

@@ -37,6 +37,8 @@ import { ApprovalNode }  from "./nodes/ApprovalNode";
 import { SlackNode }     from "./nodes/SlackNode";
 import { EmailNode }     from "./nodes/EmailNode";
 import { CodeNode }      from "./nodes/CodeNode";
+import { AgentNode }     from "./nodes/AgentNode";
+import { MemoryNode }    from "./nodes/MemoryNode";
 import type { NodeType } from "@/lib/types";
 
 // Register custom node types with React Flow
@@ -48,6 +50,8 @@ const nodeTypes: NodeTypes = {
   slack:     SlackNode,
   email:     EmailNode,
   code:      CodeNode,
+  agent:     AgentNode,
+  memory:    MemoryNode,
 };
 
 interface WorkflowCanvasProps {
@@ -227,6 +231,8 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
                 slack:     "#16a34a",
                 email:     "#0284c7",
                 code:      "#ea580c",
+                agent:     "#7c3aed",   // violet
+                memory:    "#ec4899",   // pink
               };
               return typeColors[n.type ?? ""] ?? "#3a3a55";
             }}

@@ -30,6 +30,7 @@ app = FastAPI(
     description="AI Workflow Operating System — orchestrate agents, tools, and integrations visually.",
     version="0.1.0",
     lifespan=lifespan,
+    debug=settings.APP_ENV == "development",
 )
 
 app.add_middleware(

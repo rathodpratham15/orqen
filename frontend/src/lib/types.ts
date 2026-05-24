@@ -1,6 +1,6 @@
 // ─── Workflow graph types ─────────────────────────────────────────────────────
 
-export type NodeType = "llm" | "http" | "condition" | "approval" | "slack" | "email" | "code";
+export type NodeType = "llm" | "http" | "condition" | "approval" | "slack" | "email" | "code" | "agent" | "memory";
 
 export interface NodeConfig {
   // LLM
@@ -28,12 +28,22 @@ export interface NodeConfig {
   // Email
   to?:          string;
   subject?:     string;
-  body?:        string;
   from_email?:  string;
   from_name?:   string;
   // Code
   code?:        string;
   timeout?:     number;
+  // Agent (ReAct tool-use loop)
+  goal?:             string;
+  max_iterations?:   number;
+  available_tools?:  string[];
+  inject_context?:   boolean;
+  // Memory (pgvector store/search)
+  operation?:   "store" | "search";
+  content?:     string;
+  query?:       string;
+  top_k?:       number;
+  collection?:  string;
   // Generic
   [key: string]: unknown;
 }

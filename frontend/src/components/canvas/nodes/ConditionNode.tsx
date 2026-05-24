@@ -1,13 +1,13 @@
 "use client";
 
-import { type NodeProps } from "@xyflow/react";
+import { type NodeProps, type Node } from "@xyflow/react";
 import { GitBranch } from "lucide-react";
 import { BaseNode } from "./BaseNode";
 import { truncate } from "@/lib/utils";
 import { useRunStore } from "@/stores/run-store";
 import type { OrqenNodeData } from "@/stores/editor-store";
 
-export function ConditionNode({ data, id, selected }: NodeProps<OrqenNodeData & Record<string, unknown>>) {
+export function ConditionNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>) {
   const nodeStatus = useRunStore((s) => s.nodeStatuses[id]);
   const { config, label } = data as OrqenNodeData;
 
