@@ -27,6 +27,9 @@ dist/
 *.tsbuildinfo
 .npm
 
+# Next.js auto-generated (regenerated on every dev/build — do not commit)
+frontend/next-env.d.ts
+
 # IDE
 .vscode/
 .idea/
