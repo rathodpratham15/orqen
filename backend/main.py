@@ -11,6 +11,7 @@ from database import async_engine, Base
 from api.workflows import router as workflows_router
 from api.runs import router as runs_router
 from api.approvals import router as approvals_router
+from api.analytics import router as analytics_router
 
 
 @asynccontextmanager
@@ -43,6 +44,7 @@ app.add_middleware(
 app.include_router(workflows_router, prefix="/api/workflows", tags=["Workflows"])
 app.include_router(runs_router, prefix="/api/runs", tags=["Runs"])
 app.include_router(approvals_router, prefix="/api/approvals", tags=["Approvals"])
+app.include_router(analytics_router, prefix="/api/analytics", tags=["Analytics"])
 
 
 @app.get("/health")

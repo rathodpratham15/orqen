@@ -130,6 +130,35 @@ export interface ApprovalRequest {
   expires_at:  string | null;
 }
 
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+export interface WorkflowStat {
+  workflow_id:   string;
+  workflow_name: string;
+  run_count:     number;
+  tokens:        number;
+  cost_usd:      number;
+  success_rate:  number;
+}
+
+export interface AnalyticsStats {
+  total_runs:      number;
+  runs_last_24h:   number;
+  success_rate:    number;
+  total_tokens:    number;
+  total_cost_usd:  number;
+  avg_duration_ms: number | null;
+  by_status:       Record<string, number>;
+  top_workflows:   WorkflowStat[];
+}
+
+export interface DailyRuns {
+  date:    string;
+  success: number;
+  failed:  number;
+  total:   number;
+}
+
 // ─── SSE event types ──────────────────────────────────────────────────────────
 
 export type RunEvent =
