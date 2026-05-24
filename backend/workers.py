@@ -33,6 +33,8 @@ celery_app.conf.update(
     # Upstash Redis TLS support (rediss:// URLs require SSL)
     broker_use_ssl={"ssl_cert_reqs": ssl.CERT_NONE} if settings.CELERY_BROKER_URL.startswith("rediss://") else None,
     redis_backend_use_ssl={"ssl_cert_reqs": ssl.CERT_NONE} if settings.CELERY_RESULT_BACKEND.startswith("rediss://") else None,
+    # Silence Celery 6.0 deprecation warning
+    broker_connection_retry_on_startup=True,
     # Routing
     task_routes={
         "engine.executor.execute_workflow_task": {"queue": "workflows"},
