@@ -28,6 +28,9 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,      # one task at a time per worker slot
     # Results
     result_expires=86400,              # keep results 24h
+    # Upstash Redis TLS support (rediss:// URLs require SSL)
+    broker_use_ssl={"ssl_cert_reqs": None} if settings.CELERY_BROKER_URL.startswith("rediss://") else None,
+    redis_backend_use_ssl={"ssl_cert_reqs": None} if settings.CELERY_RESULT_BACKEND.startswith("rediss://") else None,
     # Routing
     task_routes={
         "engine.executor.execute_workflow_task": {"queue": "workflows"},
