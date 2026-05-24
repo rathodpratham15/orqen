@@ -21,6 +21,9 @@ const config: Config = {
         "node-http":      "#2563eb",
         "node-condition": "#d97706",
         "node-approval":  "#0d9488",
+        "node-slack":     "#16a34a",
+        "node-email":     "#0284c7",
+        "node-code":      "#ea580c",
         // Run statuses
         "status-running": "#3b82f6",
         "status-success": "#16a34a",
