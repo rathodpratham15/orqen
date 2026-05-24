@@ -62,11 +62,11 @@ async def trigger_run(
 
 @router.get("", response_model=list[WorkflowRunResponse])
 async def list_runs(
+    user_id: UserDep,
+    db: DBDep,
     workflow_id: uuid.UUID | None = None,
     status: str | None = None,
     limit: int = 50,
-    user_id: UserDep = Depends(get_current_user_id),
-    db: DBDep = Depends(get_db),
 ):
     """List runs, optionally filtered by workflow or status."""
     query = (
