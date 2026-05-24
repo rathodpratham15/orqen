@@ -237,6 +237,31 @@ async def _exec_search_memory(tool_input: dict[str, Any], run_id: str) -> dict[s
 # AgentNode
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _serialize_content(content: list[Any]) -> list[dict]:
+    """
+    Convert Anthropic SDK ContentBlock objects to plain JSON-serializable dicts.
+    Required before storing messages in JSONB columns.
+    """
+    result = []
+    for block in content:
+        if block.type == "text":
+            result.append({"type": "text", "text": block.text})
+        elif block.type == "tool_use":
+            result.append({
+                "type":  "tool_use",
+                "id":    block.id,
+                "name":  block.name,
+                "input": block.input,
+            })
+        else:
+            # Fallback: use model_dump if available (Pydantic models), else repr
+            try:
+                result.append(block.model_dump())
+            except AttributeError:
+                result.append({"type": block.type, "raw": repr(block)})
+    return result
+
+
 class AgentNode(BaseNode):
     """
     Multi-step Claude ReAct agent.
@@ -336,8 +361,9 @@ class AgentNode(BaseNode):
             if text_parts:
                 final_answer = "\n".join(text_parts)
 
-            # Append assistant turn to history
-            messages.append({"role": "assistant", "content": response.content})
+            # Append assistant turn to history as JSON-serializable dicts
+            # (Anthropic SDK returns ContentBlock objects; we need plain dicts for JSONB storage)
+            messages.append({"role": "assistant", "content": _serialize_content(response.content)})
 
             # ── No tool calls → done ───────────────────────────────────────
             if response.stop_reason == "end_turn" or not tool_use_blocks:
