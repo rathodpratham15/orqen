@@ -46,6 +46,7 @@ from typing import Any
 import anthropic
 import httpx
 
+from config import settings
 from .base import BaseNode, NodeResult
 
 # ── Cost constants (Sonnet 4 pricing) ────────────────────────────────────────
@@ -273,7 +274,7 @@ class AgentNode(BaseNode):
 
     def __init__(self) -> None:
         self._client = anthropic.AsyncAnthropic(
-            api_key=os.environ.get("ANTHROPIC_API_KEY", "")
+            api_key=settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY", "")
         )
 
     async def execute(self, config: dict[str, Any], context) -> NodeResult:
