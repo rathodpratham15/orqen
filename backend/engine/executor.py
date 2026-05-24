@@ -43,7 +43,13 @@ from .nodes.base import NodeStatus
 
 # ─── Redis client for SSE pub/sub ────────────────────────────────────────────
 
-_redis = redis_sync.from_url(settings.REDIS_URL, decode_responses=True)
+_redis = redis_sync.from_url(
+    settings.REDIS_URL,
+    decode_responses=True,
+    # Upstash uses rediss:// (TLS) — ssl_cert_reqs=None skips cert verification
+    # which is required for Upstash's self-signed cert
+    ssl_cert_reqs=None if settings.REDIS_URL.startswith("rediss://") else None,
+)
 
 
 def _publish(run_id: str, event: dict[str, Any]) -> None:

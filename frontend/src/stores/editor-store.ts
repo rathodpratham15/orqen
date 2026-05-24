@@ -70,6 +70,9 @@ const DEFAULT_CONFIGS: Record<NodeType, NodeConfig> = {
   http:      { url: "", method: "GET", headers: {} },
   condition: { left: "", operator: "==", right: "" },
   approval:  { message: "Please review and approve to continue.", timeout_hours: 24 },
+  slack:     { webhook_url: "", text: "", username: "Orqen", icon_emoji: ":robot_face:" },
+  email:     { to: "", subject: "", body: "", from_name: "Orqen" },
+  code:      { code: "# Access prior node outputs via `inputs` dict\n# e.g. text = inputs.get('llm_node', {}).get('text', '')\n\nresult = inputs", timeout: 10 },
 };
 
 const DEFAULT_LABELS: Record<NodeType, string> = {
@@ -77,6 +80,9 @@ const DEFAULT_LABELS: Record<NodeType, string> = {
   http:      "HTTP Request",
   condition: "Condition",
   approval:  "Approval",
+  slack:     "Slack",
+  email:     "Email",
+  code:      "Code",
 };
 
 let _nodeCounter = 1;

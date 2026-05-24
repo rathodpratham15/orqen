@@ -113,7 +113,9 @@ async def stream_run_events(run_id: uuid.UUID, request: Request):
     Events are published by the Celery worker to Redis channel 'run:{run_id}'.
     """
     async def event_generator() -> AsyncIterator[str]:
-        client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        # ssl_cert_reqs=None required for Upstash rediss:// TLS connections
+        ssl_params = {"ssl_cert_reqs": None} if settings.REDIS_URL.startswith("rediss://") else {}
+        client = aioredis.from_url(settings.REDIS_URL, decode_responses=True, **ssl_params)
         pubsub = client.pubsub()
         await pubsub.subscribe(f"run:{run_id}")
 

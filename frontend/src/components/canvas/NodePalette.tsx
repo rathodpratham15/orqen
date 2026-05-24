@@ -4,7 +4,7 @@
  */
 "use client";
 
-import { Sparkles, Globe, GitBranch, ShieldCheck } from "lucide-react";
+import { Sparkles, Globe, GitBranch, ShieldCheck, MessageSquare, Mail, Terminal } from "lucide-react";
 import type { NodeType } from "@/lib/types";
 
 interface PaletteItem {
@@ -43,6 +43,27 @@ const PALETTE_ITEMS: PaletteItem[] = [
     description: "Pause for human review",
     icon:        <ShieldCheck size={14} />,
     accent:      "border-l-teal-500 text-teal-400",
+  },
+  {
+    type:        "slack",
+    label:       "Slack",
+    description: "Post to a Slack channel",
+    icon:        <MessageSquare size={14} />,
+    accent:      "border-l-green-500 text-green-400",
+  },
+  {
+    type:        "email",
+    label:       "Email",
+    description: "Send an email via Resend",
+    icon:        <Mail size={14} />,
+    accent:      "border-l-sky-500 text-sky-400",
+  },
+  {
+    type:        "code",
+    label:       "Code",
+    description: "Run a Python snippet",
+    icon:        <Terminal size={14} />,
+    accent:      "border-l-orange-500 text-orange-400",
   },
 ];
 

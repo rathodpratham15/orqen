@@ -1,0 +1,92 @@
+{
+  "_comment": "Demo workflow: Research & Notify. Import via POST /api/workflows with this as `definition`.",
+  "name": "Research & Notify",
+  "description": "Research a topic with AI, get human approval, then notify via Slack and Email.",
+  "definition": {
+    "nodes": [
+      {
+        "id": "llm_research",
+        "type": "llm",
+        "label": "Research",
+        "position": { "x": 300, "y": 80 },
+        "config": {
+          "model": "claude-sonnet-4-6",
+          "system_prompt": "You are a research analyst. Be concise and factual.",
+          "prompt": "Give me 5 key insights about: {{ trigger.topic }}\n\nFormat as a numbered list.",
+          "max_tokens": 1024
+        }
+      },
+      {
+        "id": "code_parse",
+        "type": "code",
+        "label": "Parse insights",
+        "position": { "x": 300, "y": 240 },
+        "config": {
+          "timeout": 5,
+          "code": "raw = inputs.get('llm_research', {}).get('text', '')\nlines = [l.strip() for l in raw.split('\\n') if l.strip() and l.strip()[0].isdigit()]\nresult = {'insights': lines, 'count': len(lines)}"
+        }
+      },
+      {
+        "id": "llm_format",
+        "type": "llm",
+        "label": "Format message",
+        "position": { "x": 300, "y": 400 },
+        "config": {
+          "model": "claude-sonnet-4-6",
+          "prompt": "Write a concise Slack message (2-3 sentences max) summarizing these insights about {{ trigger.topic }}:\n\n{{ llm_research.text }}\n\nMake it engaging and end with a call to action.",
+          "max_tokens": 256
+        }
+      },
+      {
+        "id": "approval_check",
+        "type": "approval",
+        "label": "Review before sending",
+        "position": { "x": 300, "y": 560 },
+        "config": {
+          "message": "Ready to post research on '{{ trigger.topic }}' to Slack and send email. Review the message below.",
+          "summary": "{{ llm_format.text }}",
+          "timeout_hours": 24
+        }
+      },
+      {
+        "id": "slack_notify",
+        "type": "slack",
+        "label": "Post to Slack",
+        "position": { "x": 160, "y": 720 },
+        "config": {
+          "webhook_url": "REPLACE_WITH_YOUR_SLACK_WEBHOOK_URL",
+          "text": "📊 *Research: {{ trigger.topic }}*\n\n{{ llm_format.text }}",
+          "username": "Orqen Research Bot",
+          "icon_emoji": ":bar_chart:"
+        }
+      },
+      {
+        "id": "email_notify",
+        "type": "email",
+        "label": "Send email summary",
+        "position": { "x": 440, "y": 720 },
+        "config": {
+          "to": "{{ trigger.email }}",
+          "subject": "Research brief: {{ trigger.topic }}",
+          "body": "<h2>Research Brief: {{ trigger.topic }}</h2>\n<p>{{ llm_format.text }}</p>\n<hr>\n<h3>Full insights:</h3>\n<p>{{ llm_research.text }}</p>",
+          "from_name": "Orqen"
+        }
+      }
+    ],
+    "edges": [
+      { "id": "e1", "source": "llm_research",   "target": "code_parse",    "condition": null },
+      { "id": "e2", "source": "code_parse",      "target": "llm_format",    "condition": null },
+      { "id": "e3", "source": "llm_format",      "target": "approval_check","condition": null },
+      { "id": "e4", "source": "approval_check",  "target": "slack_notify",  "condition": null },
+      { "id": "e5", "source": "approval_check",  "target": "email_notify",  "condition": null }
+    ]
+  },
+  "trigger_config": {
+    "type": "manual",
+    "config": {}
+  },
+  "_trigger_example": {
+    "topic": "AI in healthcare 2025",
+    "email": "you@example.com"
+  }
+}

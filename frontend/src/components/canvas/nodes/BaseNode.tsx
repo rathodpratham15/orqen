@@ -15,13 +15,16 @@ import { cn } from "@/lib/utils";
 import type { NodeStatus } from "@/lib/types";
 import type { ReactNode } from "react";
 
-export type NodeAccent = "llm" | "http" | "condition" | "approval";
+export type NodeAccent = "llm" | "http" | "condition" | "approval" | "slack" | "email" | "code";
 
 const ACCENT_CLASSES: Record<NodeAccent, string> = {
   llm:       "border-l-[3px] border-l-purple-500",
   http:      "border-l-[3px] border-l-blue-500",
   condition: "border-l-[3px] border-l-amber-500",
   approval:  "border-l-[3px] border-l-teal-500",
+  slack:     "border-l-[3px] border-l-green-500",
+  email:     "border-l-[3px] border-l-sky-500",
+  code:      "border-l-[3px] border-l-orange-500",
 };
 
 const STATUS_RING: Record<NodeStatus, string> = {

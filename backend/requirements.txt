@@ -33,6 +33,7 @@ python-dotenv==1.0.1
 tenacity==8.5.0          # Retry logic
 structlog==24.4.0        # Structured logging
 pgvector==0.3.2          # Vector similarity (memory)
+croniter==3.0.3          # Cron expression parsing (scheduler)
 
 # Dev
 pytest==8.3.2
