@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Workflow, Play, ShieldCheck, Zap } from "lucide-react";
+import { Workflow, Play, ShieldCheck, Zap, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/",          icon: Workflow,    label: "Workflows" },
-  { href: "/runs",      icon: Play,        label: "Runs"      },
-  { href: "/approvals", icon: ShieldCheck, label: "Approvals" },
+  { href: "/",           icon: Workflow,   label: "Workflows"    },
+  { href: "/runs",       icon: Play,       label: "Runs"         },
+  { href: "/approvals",  icon: ShieldCheck,label: "Approvals"    },
+  { href: "/analytics",  icon: BarChart2,  label: "Observability"},
 ];
 
 export function Sidebar() {

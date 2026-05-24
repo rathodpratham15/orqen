@@ -5,6 +5,7 @@
 import type {
   Workflow, WorkflowRun, ApprovalRequest,
   WorkflowDefinition, TriggerConfig, RunEvent,
+  AnalyticsStats, DailyRuns,
 } from "./types";
 
 const BASE = "/api";
@@ -80,6 +81,14 @@ export const api = {
       };
       return es;
     },
+  },
+
+  analytics: {
+    stats: () =>
+      request<AnalyticsStats>("/analytics/stats"),
+
+    runsOverTime: (days = 7) =>
+      request<DailyRuns[]>(`/analytics/runs-over-time?days=${days}`),
   },
 
   approvals: {
