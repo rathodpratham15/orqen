@@ -12,12 +12,18 @@ from .llm_node import LLMNode
 from .http_node import HTTPNode
 from .condition_node import ConditionNode
 from .approval_node import ApprovalNode
+from .slack_node import SlackNode
+from .email_node import EmailNode
+from .code_node import CodeNode
 
 NODE_REGISTRY: dict[str, type[BaseNode]] = {
     "llm":       LLMNode,
     "http":      HTTPNode,
     "condition": ConditionNode,
     "approval":  ApprovalNode,
+    "slack":     SlackNode,
+    "email":     EmailNode,
+    "code":      CodeNode,
 }
 
 __all__ = [
@@ -29,4 +35,7 @@ __all__ = [
     "HTTPNode",
     "ConditionNode",
     "ApprovalNode",
+    "SlackNode",
+    "EmailNode",
+    "CodeNode",
 ]
