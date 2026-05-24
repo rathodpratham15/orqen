@@ -160,6 +160,97 @@ export function ConfigPanel() {
           </>
         )}
 
+        {nodeType === "slack" && (
+          <>
+            <Field label="Webhook URL" hint="Slack → Apps → Incoming Webhooks">
+              <Input
+                value={(config.webhook_url as string) ?? ""}
+                onChange={(v) => set("webhook_url", v)}
+                placeholder="https://hooks.slack.com/services/..."
+              />
+            </Field>
+            <Field label="Message" hint="Supports {{ }} templates">
+              <Textarea
+                value={(config.text as string) ?? ""}
+                onChange={(v) => set("text", v)}
+                placeholder="New insight: {{ llm_node.text }}"
+                rows={4}
+              />
+            </Field>
+            <Field label="Bot name">
+              <Input
+                value={(config.username as string) ?? "Orqen"}
+                onChange={(v) => set("username", v)}
+                placeholder="Orqen"
+              />
+            </Field>
+            <Field label="Icon emoji">
+              <Input
+                value={(config.icon_emoji as string) ?? ":robot_face:"}
+                onChange={(v) => set("icon_emoji", v)}
+                placeholder=":robot_face:"
+              />
+            </Field>
+          </>
+        )}
+
+        {nodeType === "email" && (
+          <>
+            <Field label="To" hint="Supports {{ trigger.email }}">
+              <Input
+                value={(config.to as string) ?? ""}
+                onChange={(v) => set("to", v)}
+                placeholder="recipient@example.com"
+              />
+            </Field>
+            <Field label="Subject" hint="Supports {{ }} templates">
+              <Input
+                value={(config.subject as string) ?? ""}
+                onChange={(v) => set("subject", v)}
+                placeholder="Research summary: {{ trigger.topic }}"
+              />
+            </Field>
+            <Field label="Body (HTML or plain text)" hint="Supports {{ }} templates">
+              <Textarea
+                value={(config.body as string) ?? ""}
+                onChange={(v) => set("body", v)}
+                placeholder="<h2>Summary</h2><p>{{ llm_node.text }}</p>"
+                rows={6}
+              />
+            </Field>
+            <Field label="From name">
+              <Input
+                value={(config.from_name as string) ?? "Orqen"}
+                onChange={(v) => set("from_name", v)}
+                placeholder="Orqen"
+              />
+            </Field>
+          </>
+        )}
+
+        {nodeType === "code" && (
+          <>
+            <Field
+              label="Python code"
+              hint="Use `inputs` dict to access prior node outputs. Set `result` to pass data forward."
+            >
+              <Textarea
+                value={(config.code as string) ?? ""}
+                onChange={(v) => set("code", v)}
+                placeholder={"# inputs = prior node outputs\ntext = inputs.get('llm_node', {}).get('text', '')\nresult = text.upper()"}
+                rows={10}
+              />
+            </Field>
+            <Field label="Timeout (seconds, max 30)">
+              <Input
+                type="number"
+                value={String(config.timeout ?? 10)}
+                onChange={(v) => set("timeout", Math.min(parseInt(v) || 10, 30))}
+              />
+            </Field>
+          </>
+        )}
+
         {nodeType === "approval" && (
           <>
             <Field label="Approval message" hint="What the reviewer sees">

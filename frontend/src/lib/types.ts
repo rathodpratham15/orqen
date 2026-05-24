@@ -1,6 +1,6 @@
 // ─── Workflow graph types ─────────────────────────────────────────────────────
 
-export type NodeType = "llm" | "http" | "condition" | "approval";
+export type NodeType = "llm" | "http" | "condition" | "approval" | "slack" | "email" | "code";
 
 export interface NodeConfig {
   // LLM
@@ -22,6 +22,18 @@ export interface NodeConfig {
   message?:       string;
   summary?:       string;
   timeout_hours?: number;
+  // Slack
+  webhook_url?: string;
+  icon_emoji?:  string;
+  // Email
+  to?:          string;
+  subject?:     string;
+  body?:        string;
+  from_email?:  string;
+  from_name?:   string;
+  // Code
+  code?:        string;
+  timeout?:     number;
   // Generic
   [key: string]: unknown;
 }
