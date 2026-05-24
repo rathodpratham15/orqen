@@ -28,6 +28,8 @@ from collections import deque
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
+import ssl
+
 import redis as redis_sync
 from sqlalchemy import select
 
@@ -46,9 +48,7 @@ from .nodes.base import NodeStatus
 _redis = redis_sync.from_url(
     settings.REDIS_URL,
     decode_responses=True,
-    # Upstash uses rediss:// (TLS) — ssl_cert_reqs=None skips cert verification
-    # which is required for Upstash's self-signed cert
-    ssl_cert_reqs=None if settings.REDIS_URL.startswith("rediss://") else None,
+    **({"ssl_cert_reqs": ssl.CERT_NONE} if settings.REDIS_URL.startswith("rediss://") else {}),
 )
 
 

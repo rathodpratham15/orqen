@@ -2,6 +2,8 @@
 Celery application configuration.
 Workers pick up tasks from Redis; beat scheduler handles cron triggers.
 """
+import ssl
+
 from celery import Celery
 from celery.schedules import crontab
 
@@ -29,8 +31,8 @@ celery_app.conf.update(
     # Results
     result_expires=86400,              # keep results 24h
     # Upstash Redis TLS support (rediss:// URLs require SSL)
-    broker_use_ssl={"ssl_cert_reqs": None} if settings.CELERY_BROKER_URL.startswith("rediss://") else None,
-    redis_backend_use_ssl={"ssl_cert_reqs": None} if settings.CELERY_RESULT_BACKEND.startswith("rediss://") else None,
+    broker_use_ssl={"ssl_cert_reqs": ssl.CERT_NONE} if settings.CELERY_BROKER_URL.startswith("rediss://") else None,
+    redis_backend_use_ssl={"ssl_cert_reqs": ssl.CERT_NONE} if settings.CELERY_RESULT_BACKEND.startswith("rediss://") else None,
     # Routing
     task_routes={
         "engine.executor.execute_workflow_task": {"queue": "workflows"},

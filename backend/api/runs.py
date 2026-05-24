@@ -114,7 +114,8 @@ async def stream_run_events(run_id: uuid.UUID, request: Request):
     """
     async def event_generator() -> AsyncIterator[str]:
         # ssl_cert_reqs=None required for Upstash rediss:// TLS connections
-        ssl_params = {"ssl_cert_reqs": None} if settings.REDIS_URL.startswith("rediss://") else {}
+        import ssl as _ssl
+        ssl_params = {"ssl_cert_reqs": _ssl.CERT_NONE} if settings.REDIS_URL.startswith("rediss://") else {}
         client = aioredis.from_url(settings.REDIS_URL, decode_responses=True, **ssl_params)
         pubsub = client.pubsub()
         await pubsub.subscribe(f"run:{run_id}")
