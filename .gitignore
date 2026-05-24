@@ -14,6 +14,8 @@ venv/
 env/
 ENV/
 .env
+.env.local
+.env.*.local
 !.env.example
 
 # Node
@@ -24,6 +26,9 @@ out/
 dist/
 *.tsbuildinfo
 .npm
+
+# Next.js auto-generated (regenerated on every dev/build — do not commit)
+frontend/next-env.d.ts
 
 # IDE
 .vscode/

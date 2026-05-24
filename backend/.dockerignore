@@ -1,0 +1,30 @@
+# Never bake secrets into the image
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+
+# Alembic generated files that shouldn't be in container
+# (run migrations as a separate step, not baked into image)
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
