@@ -3,8 +3,9 @@
 # No "Root Directory" setting needed in the Railway dashboard.
 
 [phases.setup]
-# System libs: libpq for psycopg2, gcc/libffi for C extensions
-nixPkgs = ["libpq", "gcc", "libffi", "openssl"]
+# Use apt packages (Railway builder is Ubuntu-based — aptPkgs is more reliable
+# than nixPkgs which requires downloading a nixpkgs snapshot from GitHub)
+aptPkgs = ["libpq-dev", "gcc", "python3-dev", "libffi-dev", "libssl-dev"]
 
 [phases.install]
 cmds = [
