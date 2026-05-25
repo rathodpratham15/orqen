@@ -9,6 +9,9 @@ import type {
 } from "./types";
 
 const BASE = "/api";
+// SSE streams must go directly to the Railway backend — Vercel's serverless
+// rewrite closes long-lived connections before events arrive.
+const SSE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "") + "/api";
 
 async function request<T>(
   path: string,
@@ -69,7 +72,7 @@ export const api = {
      * Calls onEvent for each event; resolves when the stream closes.
      */
     stream: (runId: string, onEvent: (event: RunEvent) => void): EventSource => {
-      const es = new EventSource(`${BASE}/runs/${runId}/stream`);
+      const es = new EventSource(`${SSE_BASE}/runs/${runId}/stream`);
       es.onmessage = (e) => {
         try {
           const event: RunEvent = JSON.parse(e.data);
