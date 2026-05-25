@@ -38,6 +38,19 @@ from .base import BaseNode, NodeResult
 
 _model = None
 _model_lock = asyncio.Lock()
+_SENTENCE_TRANSFORMERS_AVAILABLE: bool | None = None  # None = not yet checked
+
+
+def _check_sentence_transformers() -> bool:
+    """Return True if sentence-transformers is installed."""
+    global _SENTENCE_TRANSFORMERS_AVAILABLE
+    if _SENTENCE_TRANSFORMERS_AVAILABLE is None:
+        try:
+            import sentence_transformers  # noqa: F401
+            _SENTENCE_TRANSFORMERS_AVAILABLE = True
+        except ImportError:
+            _SENTENCE_TRANSFORMERS_AVAILABLE = False
+    return _SENTENCE_TRANSFORMERS_AVAILABLE
 
 
 async def _get_model():
@@ -63,8 +76,19 @@ def _load_model_sync():
     return SentenceTransformer("all-MiniLM-L6-v2")
 
 
+# Zero vector fallback when sentence-transformers is unavailable
+_ZERO_VECTOR = [0.0] * 384
+
+
 async def _embed(text_: str) -> list[float]:
-    """Embed a string into a 384-dim vector."""
+    """
+    Embed a string into a 384-dim vector.
+    Falls back to a zero vector when sentence-transformers is not installed.
+    Note: zero-vector search degrades to returning results in arbitrary order.
+    """
+    if not _check_sentence_transformers():
+        return _ZERO_VECTOR
+
     model = await _get_model()
     loop = asyncio.get_event_loop()
     embedding = await loop.run_in_executor(
