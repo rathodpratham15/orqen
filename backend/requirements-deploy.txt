@@ -1,0 +1,39 @@
+# Production requirements — excludes sentence-transformers (PyTorch ~1GB)
+# MemoryNode degrades gracefully when sentence-transformers is unavailable:
+# store/search still work but embeddings fall back to a null vector.
+# To enable full semantic memory: add sentence-transformers to a custom layer
+# or use a Railway service with more RAM (Pro plan).
+
+# Web framework
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# Database
+sqlalchemy[asyncio]==2.0.31
+asyncpg==0.29.0
+alembic==1.13.2
+psycopg2-binary==2.9.9
+
+# Queue
+celery==5.4.0
+redis==5.0.7
+
+# AI
+anthropic==0.31.0
+
+# HTTP client
+httpx==0.27.0
+
+# Auth
+python-jose[cryptography]==3.3.0
+
+# Config
+pydantic==2.8.2
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
+
+# Utilities
+tenacity==8.5.0
+pgvector==0.3.2
+croniter==3.0.3
