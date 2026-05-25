@@ -49,7 +49,7 @@ export const api = {
 
     // ─── Runs ──────────────────────────────────────────────────────────────
     triggerRun: (workflowId: string, triggerData: Record<string, unknown> = {}) =>
-      request<WorkflowRun>(`/workflows/${workflowId}/run`, {
+      request<WorkflowRun>(`/runs/${workflowId}/run`, {
         method: "POST",
         body: JSON.stringify({ trigger_data: triggerData }),
       }),
