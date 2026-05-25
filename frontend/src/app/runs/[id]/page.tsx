@@ -13,7 +13,7 @@ import {
 import { api } from "@/lib/api";
 import { cn, formatDate, formatDuration, formatTokens, formatCost } from "@/lib/utils";
 import { ExecutionTrace } from "@/components/monitor/ExecutionTrace";
-import type { WorkflowRun, RunStatus } from "@/lib/types";
+import type { WorkflowRun, RunStatus, NodeStatus } from "@/lib/types";
 
 const STATUS_CONFIG: Record<RunStatus, { icon: React.ReactNode; color: string; label: string }> = {
   pending:   { icon: <Clock   size={14} />, color: "text-zinc-400",  label: "Pending"   },
@@ -68,7 +68,7 @@ export default function RunPage() {
                   ne.node_id === event.node_id
                     ? {
                         ...ne,
-                        status:      event.status      as string ?? ne.status,
+                        status:      (event.status as NodeStatus) ?? ne.status,
                         tokens_used: event.tokens      as number ?? ne.tokens_used,
                         duration_ms: event.duration_ms as number ?? ne.duration_ms,
                         error:       event.error       as string ?? ne.error,
