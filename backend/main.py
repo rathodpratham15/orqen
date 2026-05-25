@@ -51,21 +51,3 @@ app.include_router(analytics_router, prefix="/api/analytics", tags=["Analytics"]
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "0.1.0"}
-
-
-@app.get("/healthz/db")
-async def health_db():
-    """DB connectivity probe — diagnose connection + env var injection."""
-    import os, urllib.parse
-    # Show what settings resolved AND what os.environ has (host only, no creds)
-    settings_host = urllib.parse.urlparse(settings.DATABASE_URL).hostname
-    raw_env_url   = os.environ.get("DATABASE_URL", "NOT_SET_IN_ENVIRON")
-    env_host      = urllib.parse.urlparse(raw_env_url).hostname if raw_env_url != "NOT_SET_IN_ENVIRON" else "NOT_SET_IN_ENVIRON"
-    diag = {"settings_db_host": settings_host, "environ_db_host": env_host, "app_env": settings.APP_ENV}
-    try:
-        from sqlalchemy import text
-        async with async_engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        return {"db": "ok", **diag}
-    except Exception as exc:
-        return {"db": "error", "detail": str(exc), "type": type(exc).__name__, **diag}
