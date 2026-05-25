@@ -16,12 +16,22 @@ from config import settings
 
 
 # Async engine — used by FastAPI routes and engine executor
+#
+# connect_args notes:
+#   statement_cache_size=0  — required for Neon's PgBouncer pooler endpoint;
+#                             PgBouncer (transaction mode) does not support
+#                             asyncpg's prepared-statement protocol messages.
+#   prepared_statement_cache_size=0 — alias kept for older asyncpg versions.
 async_engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.APP_ENV == "development",
-    pool_size=10,
-    max_overflow=20,
+    pool_size=5,
+    max_overflow=10,
     pool_pre_ping=True,
+    connect_args={
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    },
 )
 
 async_session_factory = async_sessionmaker(
