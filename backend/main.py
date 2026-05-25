@@ -51,3 +51,15 @@ app.include_router(analytics_router, prefix="/api/analytics", tags=["Analytics"]
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.get("/healthz/db")
+async def health_db():
+    """DB connectivity probe — returns the actual exception on failure."""
+    try:
+        from sqlalchemy import text
+        async with async_engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return {"db": "ok"}
+    except Exception as exc:
+        return {"db": "error", "detail": str(exc), "type": type(exc).__name__}
