@@ -1,16 +1,10 @@
-# Root-level Nixpacks config — Railway uses project root as build context
+# Root-level Nixpacks config — Railway uses project root as build context.
 # No "Root Directory" setting needed in the Railway dashboard.
 #
-# No [phases.setup] override: let Nixpacks auto-detect Python and install it.
-# All packages in requirements-deploy.txt use binary wheels, so no system libs
-# (libpq-dev, gcc, etc.) are needed at build time.
-
-[phases.install]
-cmds = [
-    "pip install --upgrade pip",
-    "pip install -r backend/requirements-deploy.txt",
-]
+# Python auto-detection: Nixpacks detects Python from the root requirements.txt
+# (which includes backend/requirements-deploy.txt). No [phases.setup] or
+# [phases.install] override needed — Nixpacks auto-runs pip install -r requirements.txt.
 
 [start]
-# cd backend so uvicorn resolves main:app and all its imports correctly
+# cd backend so uvicorn resolves main:app and all relative imports correctly
 cmd = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"

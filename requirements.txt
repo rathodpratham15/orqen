@@ -1,0 +1,4 @@
+# Root requirements.txt — exists to trigger Nixpacks Python auto-detection.
+# Nixpacks looks for requirements.txt at the repo root; the real deps live
+# in backend/requirements-deploy.txt and are included here.
+-r backend/requirements-deploy.txt
