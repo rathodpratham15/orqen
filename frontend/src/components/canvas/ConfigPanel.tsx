@@ -278,6 +278,124 @@ export function ConfigPanel() {
             </Field>
           </>
         )}
+
+        {nodeType === "agent" && (
+          <>
+            <Field label="Goal" hint="What the agent should accomplish. Supports {{ }} templates.">
+              <Textarea
+                value={(config.goal as string) ?? ""}
+                onChange={(v) => set("goal", v)}
+                placeholder="Research the latest AI papers on {{ trigger.topic }} and summarize the key findings."
+                rows={4}
+              />
+            </Field>
+            <Field label="System prompt" hint="Optional persona / constraints for the agent">
+              <Textarea
+                value={(config.system_prompt as string) ?? ""}
+                onChange={(v) => set("system_prompt", v)}
+                placeholder="You are a careful research assistant. Cite sources. Think step by step."
+                rows={3}
+              />
+            </Field>
+            <Field label="Model">
+              <select
+                value={(config.model as string) ?? "claude-sonnet-4-6"}
+                onChange={(e) => set("model", e.target.value)}
+                className="w-full bg-[#1a1a2e] border border-[#2a2a40] rounded px-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-[#4a4a70]"
+              >
+                <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+                <option value="claude-opus-4-7">claude-opus-4-7</option>
+                <option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>
+              </select>
+            </Field>
+            <Field label="Available tools" hint="Built-in tools the agent can use">
+              {(["http_request", "run_python", "search_memory"] as const).map((tool) => {
+                const current = (config.available_tools as string[] | undefined) ?? ["http_request", "run_python"];
+                const checked = current.includes(tool);
+                return (
+                  <label key={tool} className="flex items-center gap-2 cursor-pointer py-0.5">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        set(
+                          "available_tools",
+                          checked ? current.filter((t) => t !== tool) : [...current, tool],
+                        );
+                      }}
+                      className="accent-violet-500"
+                    />
+                    <span className="text-[11px] text-zinc-300 font-mono">{tool}</span>
+                  </label>
+                );
+              })}
+            </Field>
+            <Field label="Max iterations" hint="Max tool-call rounds before forced stop">
+              <Input
+                type="number"
+                value={String(config.max_iterations ?? 10)}
+                onChange={(v) => set("max_iterations", Math.min(parseInt(v) || 10, 50))}
+              />
+            </Field>
+            <Field label="Max tokens per turn">
+              <Input
+                type="number"
+                value={String(config.max_tokens ?? 4096)}
+                onChange={(v) => set("max_tokens", parseInt(v) || 4096)}
+              />
+            </Field>
+          </>
+        )}
+
+        {nodeType === "memory" && (
+          <>
+            <Field label="Operation">
+              <select
+                value={(config.operation as string) ?? "search"}
+                onChange={(e) => set("operation", e.target.value)}
+                className="w-full bg-[#1a1a2e] border border-[#2a2a40] rounded px-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-[#4a4a70]"
+              >
+                <option value="store">store — embed and save text</option>
+                <option value="search">search — find similar memories</option>
+              </select>
+            </Field>
+            <Field label="Collection" hint="Namespace for grouping memories">
+              <Input
+                value={(config.collection as string) ?? "default"}
+                onChange={(v) => set("collection", v)}
+                placeholder="default"
+              />
+            </Field>
+            {(config.operation ?? "search") === "store" ? (
+              <Field label="Content" hint="Text to embed and store. Supports {{ }} templates.">
+                <Textarea
+                  value={(config.content as string) ?? ""}
+                  onChange={(v) => set("content", v)}
+                  placeholder="{{ llm_node.text }}"
+                  rows={4}
+                />
+              </Field>
+            ) : (
+              <>
+                <Field label="Query" hint="Semantic search query. Supports {{ }} templates.">
+                  <Textarea
+                    value={(config.query as string) ?? ""}
+                    onChange={(v) => set("query", v)}
+                    placeholder="{{ trigger.question }}"
+                    rows={3}
+                  />
+                </Field>
+                <Field label="Top K results">
+                  <Input
+                    type="number"
+                    value={String(config.top_k ?? 5)}
+                    onChange={(v) => set("top_k", parseInt(v) || 5)}
+                  />
+                </Field>
+              </>
+            )}
+          </>
+        )}
       </div>
     </aside>
   );

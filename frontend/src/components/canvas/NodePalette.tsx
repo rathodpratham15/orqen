@@ -4,7 +4,7 @@
  */
 "use client";
 
-import { Sparkles, Globe, GitBranch, ShieldCheck, MessageSquare, Mail, Terminal } from "lucide-react";
+import { Sparkles, Globe, GitBranch, ShieldCheck, MessageSquare, Mail, Terminal, Bot, Database } from "lucide-react";
 import type { NodeType } from "@/lib/types";
 
 interface PaletteItem {
@@ -64,6 +64,20 @@ const PALETTE_ITEMS: PaletteItem[] = [
     description: "Run a Python snippet",
     icon:        <Terminal size={14} />,
     accent:      "border-l-orange-500 text-orange-400",
+  },
+  {
+    type:        "agent",
+    label:       "AI Agent",
+    description: "Multi-step Claude ReAct loop",
+    icon:        <Bot size={14} />,
+    accent:      "border-l-violet-500 text-violet-400",
+  },
+  {
+    type:        "memory",
+    label:       "Memory",
+    description: "Semantic memory store / search",
+    icon:        <Database size={14} />,
+    accent:      "border-l-pink-500 text-pink-400",
   },
 ];
 

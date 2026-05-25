@@ -43,8 +43,9 @@ async def trigger_run(
     if not wf.is_active:
         raise HTTPException(status_code=400, detail="Workflow is inactive")
 
+    run_id = uuid.uuid4()
     run = WorkflowRun(
-        id=uuid.uuid4(),
+        id=run_id,
         workflow_id=workflow_id,
         status="queued",
         trigger_type="manual",
@@ -52,7 +53,14 @@ async def trigger_run(
     )
     db.add(run)
     await db.commit()
-    await db.refresh(run)
+
+    # Re-fetch with node_executions eager-loaded so Pydantic can serialize it
+    result = await db.execute(
+        select(WorkflowRun)
+        .options(selectinload(WorkflowRun.node_executions))
+        .where(WorkflowRun.id == run_id)
+    )
+    run = result.scalar_one()
 
     # Dispatch to Celery worker
     execute_workflow_task.delay(str(run.id))

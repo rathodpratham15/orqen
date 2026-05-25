@@ -1,6 +1,6 @@
 "use client";
 
-import { type NodeProps } from "@xyflow/react";
+import { type NodeProps, type Node } from "@xyflow/react";
 import { Globe } from "lucide-react";
 import { BaseNode } from "./BaseNode";
 import { truncate } from "@/lib/utils";
@@ -16,7 +16,7 @@ const METHOD_COLORS: Record<string, string> = {
   DELETE: "text-red-400",
 };
 
-export function HTTPNode({ data, id, selected }: NodeProps<OrqenNodeData & Record<string, unknown>>) {
+export function HTTPNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>) {
   const nodeStatus = useRunStore((s) => s.nodeStatuses[id]);
   const { config, label } = data as OrqenNodeData;
 

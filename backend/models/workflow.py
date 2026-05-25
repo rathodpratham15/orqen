@@ -7,16 +7,24 @@ Core tables:
   node_executions    — per-node execution records within a run
   approval_requests  — human-in-the-loop pause/resume
   workflow_schedules — cron trigger config
+  agent_memories     — pgvector semantic memory store for AgentNode / MemoryNode
 """
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    BigInteger, Boolean, ForeignKey, Integer, Numeric,
+    BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, Numeric,
     String, Text, func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+try:
+    from pgvector.sqlalchemy import Vector
+    _PGVECTOR_AVAILABLE = True
+except ImportError:
+    Vector = None  # type: ignore[assignment,misc]
+    _PGVECTOR_AVAILABLE = False
 
 from database import Base
 
@@ -48,8 +56,8 @@ class Workflow(Base):
     org_id: Mapped[str | None] = mapped_column(String(255), index=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(default=_now)
-    updated_at: Mapped[datetime] = mapped_column(default=_now, onupdate=_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now)
 
     # Relationships
     runs: Mapped[list["WorkflowRun"]] = relationship(
@@ -87,8 +95,8 @@ class WorkflowRun(Base):
     run_metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # Timing
-    started_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Observability aggregates
@@ -98,7 +106,7 @@ class WorkflowRun(Base):
     )
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(default=_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     # Relationships
     workflow: Mapped["Workflow"] = relationship("Workflow", back_populates="runs")
@@ -135,8 +143,8 @@ class NodeExecution(Base):
     # What the node produced
     output: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
-    started_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
@@ -173,8 +181,8 @@ class ApprovalRequest(Base):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     context: Mapped[dict] = mapped_column(JSONB, default=dict)
 
-    created_at: Mapped[datetime] = mapped_column(default=_now)
-    resolved_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
@@ -201,9 +209,49 @@ class WorkflowSchedule(Base):
     timezone: Mapped[str] = mapped_column(String(50), default="UTC")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    last_run_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    next_run_at: Mapped[datetime | None] = mapped_column(nullable=True, index=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
 
-    created_at: Mapped[datetime] = mapped_column(default=_now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     workflow: Mapped["Workflow"] = relationship("Workflow", back_populates="schedules")
+
+
+class AgentMemory(Base):
+    """
+    Semantic memory store for AgentNode / MemoryNode.
+
+    Each row is a single chunk of text embedded as a 384-dim vector
+    (all-MiniLM-L6-v2).  Similarity search uses pgvector's <=> operator
+    (cosine distance — lower is more similar).
+
+    The collection column is a free-form namespace so workflows can
+    maintain separate memory pools (e.g. per-user, per-project, per-topic).
+    """
+    __tablename__ = "agent_memories"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=_uuid
+    )
+
+    # Namespace for grouping memories
+    collection: Mapped[str] = mapped_column(String(255), nullable=False, default="default", index=True)
+
+    # Which run / workflow stored this memory
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    run_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+
+    # The raw text that was embedded
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # 384-dim sentence-transformers vector; None when pgvector not available
+    if _PGVECTOR_AVAILABLE:
+        embedding: Mapped[list | None] = mapped_column(Vector(384), nullable=True)
+
+    # Any extra structured data the workflow wants to attach
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    def __repr__(self) -> str:
+        return f"<AgentMemory id={self.id} collection={self.collection!r}>"

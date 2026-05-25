@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import type { NodeStatus } from "@/lib/types";
 import type { ReactNode } from "react";
 
-export type NodeAccent = "llm" | "http" | "condition" | "approval" | "slack" | "email" | "code";
+export type NodeAccent = "llm" | "http" | "condition" | "approval" | "slack" | "email" | "code" | "agent" | "memory";
 
 const ACCENT_CLASSES: Record<NodeAccent, string> = {
   llm:       "border-l-[3px] border-l-purple-500",
@@ -25,6 +25,8 @@ const ACCENT_CLASSES: Record<NodeAccent, string> = {
   slack:     "border-l-[3px] border-l-green-500",
   email:     "border-l-[3px] border-l-sky-500",
   code:      "border-l-[3px] border-l-orange-500",
+  agent:     "border-l-[3px] border-l-violet-500",
+  memory:    "border-l-[3px] border-l-pink-500",
 };
 
 const STATUS_RING: Record<NodeStatus, string> = {
