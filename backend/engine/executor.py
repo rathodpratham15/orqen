@@ -123,6 +123,7 @@ async def _execute_run(run_id: str, resume_from: str | None) -> None:
         workflow = await session.get(Workflow, run.workflow_id)
         if not workflow:
             await _fail_run(session, run, "Workflow not found")
+            _publish(run_id, {"type": "run_failed", "error": "Workflow not found"})
             return
 
         # ── Mark running ──────────────────────────────────────────────────────
@@ -138,6 +139,7 @@ async def _execute_run(run_id: str, resume_from: str | None) -> None:
             graph = WorkflowGraph.from_definition(workflow.definition)
         except ValueError as exc:
             await _fail_run(session, run, f"Invalid workflow graph: {exc}")
+            _publish(run_id, {"type": "run_failed", "error": f"Invalid workflow graph: {exc}"})
             return
 
         # ── Restore or create execution context ───────────────────────────────
@@ -159,6 +161,7 @@ async def _execute_run(run_id: str, resume_from: str | None) -> None:
 
         if not start_nodes:
             await _fail_run(session, run, "Workflow has no entry nodes")
+            _publish(run_id, {"type": "run_failed", "error": "Workflow has no entry nodes"})
             return
 
         # ── BFS traversal ─────────────────────────────────────────────────────

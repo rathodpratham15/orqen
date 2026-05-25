@@ -11,7 +11,7 @@
  */
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -60,6 +60,7 @@ interface WorkflowCanvasProps {
 
 export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const eventSourceRef  = useRef<EventSource | null>(null);
 
   const {
     nodes, edges,
@@ -68,6 +69,14 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   } = useEditorStore();
 
   const { startRun, handleEvent, runStatus, approvalId, approvalMsg } = useRunStore();
+
+  // ─── Close SSE stream on unmount ───────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      eventSourceRef.current?.close();
+      eventSourceRef.current = null;
+    };
+  }, []);
 
   // ─── Drop handler: node dragged from palette ────────────────────────────────
   const onDrop = useCallback(
@@ -106,8 +115,11 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
       const run = await api.workflows.triggerRun(workflowId);
       startRun(run.id);
 
-      // Subscribe to SSE stream
-      api.runs.stream(run.id, handleEvent);
+      // Close any previous stream before opening a new one
+      eventSourceRef.current?.close();
+
+      // Subscribe to SSE stream — store handle for cleanup on unmount
+      eventSourceRef.current = api.runs.stream(run.id, handleEvent);
     } catch (err) {
       console.error("Run failed:", err);
     }

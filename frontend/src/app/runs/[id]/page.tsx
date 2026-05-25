@@ -3,12 +3,12 @@
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, CheckCircle2, XCircle,
-  Clock, PauseCircle, Zap, DollarSign,
+  Clock, PauseCircle, Zap, DollarSign, Radio,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn, formatDate, formatDuration, formatTokens, formatCost } from "@/lib/utils";
@@ -25,28 +25,76 @@ const STATUS_CONFIG: Record<RunStatus, { icon: React.ReactNode; color: string; l
   cancelled: { icon: <XCircle      size={14} />, color: "text-zinc-500",  label: "Cancelled" },
 };
 
+const ACTIVE_STATUSES = new Set(["running", "queued", "pending"]);
+const TERMINAL_SSE    = new Set(["run_completed", "run_failed", "run_paused", "stream_end"]);
+
 export default function RunPage() {
   const { id } = useParams<{ id: string }>();
   const [run,     setRun]     = useState<WorkflowRun | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLive,  setIsLive]  = useState(false);
+  const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
+    // Initial fetch
     api.runs.get(id)
-      .then(setRun)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .then((data) => {
+        setRun(data);
+        setLoading(false);
 
-    // If run is still active, poll for updates
-    const interval = setInterval(async () => {
-      const updated = await api.runs.get(id).catch(() => null);
-      if (!updated) return;
-      setRun(updated);
-      if (!["running", "queued", "pending"].includes(updated.status)) {
-        clearInterval(interval);
-      }
-    }, 2000);
+        if (!ACTIVE_STATUSES.has(data.status)) return; // already terminal — no stream needed
 
-    return () => clearInterval(interval);
+        // Open SSE stream for live updates
+        setIsLive(true);
+        esRef.current = api.runs.stream(id, (event: Record<string, unknown>) => {
+          if (event.type === "node_started") {
+            // Mark this node as running in local state
+            setRun((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                node_executions: prev.node_executions.map((ne) =>
+                  ne.node_id === event.node_id ? { ...ne, status: "running" } : ne,
+                ),
+              };
+            });
+          } else if (event.type === "node_completed") {
+            // Patch the node with final status/metrics from the SSE event
+            setRun((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                node_executions: prev.node_executions.map((ne) =>
+                  ne.node_id === event.node_id
+                    ? {
+                        ...ne,
+                        status:      event.status      as string ?? ne.status,
+                        tokens_used: event.tokens      as number ?? ne.tokens_used,
+                        duration_ms: event.duration_ms as number ?? ne.duration_ms,
+                        error:       event.error       as string ?? ne.error,
+                      }
+                    : ne,
+                ),
+              };
+            });
+          } else if (TERMINAL_SSE.has(event.type as string)) {
+            // Do a final GET to get the fully-committed DB state, then close
+            api.runs.get(id).then(setRun).catch(console.error);
+            setIsLive(false);
+            esRef.current?.close();
+            esRef.current = null;
+          }
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+
+    return () => {
+      esRef.current?.close();
+      esRef.current = null;
+    };
   }, [id]);
 
   if (loading) {
@@ -80,6 +128,12 @@ export default function RunPage() {
           <div className={cn("flex items-center gap-2 text-sm font-semibold mb-1", statusCfg.color)}>
             {statusCfg.icon}
             <span>{statusCfg.label}</span>
+            {isLive && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-medium">
+                <Radio size={9} className="animate-pulse" />
+                Live
+              </span>
+            )}
           </div>
           <p className="text-xs text-zinc-500 font-mono">{run.id}</p>
         </div>
