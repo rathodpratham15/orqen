@@ -7,4 +7,4 @@
 
 [start]
 # cd backend so uvicorn resolves main:app and all relative imports correctly
-cmd = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"
+cmd = "cd backend && bash start.sh"
