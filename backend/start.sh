@@ -11,7 +11,7 @@ echo "[start.sh] Starting Celery worker..."
 celery -A workers worker \
   --loglevel=info \
   --concurrency=1 \
-  -Q celery,default &
+  -Q workflows,default &
 
 CELERY_PID=$!
 echo "[start.sh] Celery PID: $CELERY_PID"
