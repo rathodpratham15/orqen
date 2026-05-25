@@ -1,0 +1,17 @@
+# Root-level Nixpacks config — Railway uses project root as build context
+# This file tells Nixpacks how to build and run the backend service
+# No "Root Directory" setting needed in the Railway dashboard.
+
+[phases.setup]
+# System libs: libpq for psycopg2, gcc/libffi for C extensions
+nixPkgs = ["libpq", "gcc", "libffi", "openssl"]
+
+[phases.install]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r backend/requirements-deploy.txt",
+]
+
+[start]
+# Change into backend/ so uvicorn can find main:app and all its imports
+cmd = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"

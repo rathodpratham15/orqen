@@ -1,15 +1,15 @@
 # Railway deployment configuration
 # Docs: https://docs.railway.com/reference/config-as-code
 #
-# IMPORTANT: In the Railway dashboard, set "Root Directory" = backend
-# for the backend/worker services. Nixpacks will auto-detect Python
-# and install requirements-deploy.txt from that directory.
+# No "Root Directory" setting needed — nixpacks.toml at the project root
+# handles install (from backend/requirements-deploy.txt) and start (cd backend).
 
 [build]
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"
+# cd backend so uvicorn can resolve imports relative to that directory
+startCommand = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"
 healthcheckPath = "/health"
 healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
