@@ -55,11 +55,14 @@ async def health():
 
 @app.get("/healthz/db")
 async def health_db():
-    """DB connectivity probe — returns the actual exception on failure."""
+    """DB connectivity probe — returns actual exception + config host on failure."""
+    import urllib.parse
+    parsed = urllib.parse.urlparse(settings.DATABASE_URL)
+    host_info = {"db_host": parsed.hostname, "db_port": parsed.port, "app_env": settings.APP_ENV}
     try:
         from sqlalchemy import text
         async with async_engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-        return {"db": "ok"}
+        return {"db": "ok", **host_info}
     except Exception as exc:
-        return {"db": "error", "detail": str(exc), "type": type(exc).__name__}
+        return {"db": "error", "detail": str(exc), "type": type(exc).__name__, **host_info}
