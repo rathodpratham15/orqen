@@ -17,8 +17,9 @@ export interface NodeRunState {
 interface RunStore {
   activeRunId:   string | null;
   runStatus:     RunStatus | null;
-  nodeStatuses:  Record<string, NodeRunState>;   // node_id → state
-  approvalId:    string | null;                  // set when run is paused
+  nodeStatuses:  Record<string, NodeRunState>;            // node_id → live status
+  nodeOutputs:   Record<string, Record<string, unknown>>; // node_id → full output (set after run)
+  approvalId:    string | null;
   approvalMsg:   string | null;
   totalTokens:   number;
   costUsd:       number;
@@ -26,15 +27,17 @@ interface RunStore {
   error:         string | null;
 
   // Actions
-  startRun:      (runId: string) => void;
-  handleEvent:   (event: RunEvent) => void;
-  clearRun:      () => void;
+  startRun:       (runId: string) => void;
+  handleEvent:    (event: RunEvent) => void;
+  setNodeOutputs: (outputs: Record<string, Record<string, unknown>>) => void;
+  clearRun:       () => void;
 }
 
 export const useRunStore = create<RunStore>((set) => ({
   activeRunId:  null,
   runStatus:    null,
   nodeStatuses: {},
+  nodeOutputs:  {},
   approvalId:   null,
   approvalMsg:  null,
   totalTokens:  0,
@@ -47,6 +50,7 @@ export const useRunStore = create<RunStore>((set) => ({
       activeRunId:  runId,
       runStatus:    "queued",
       nodeStatuses: {},
+      nodeOutputs:  {},
       approvalId:   null,
       approvalMsg:  null,
       totalTokens:  0,
@@ -54,6 +58,8 @@ export const useRunStore = create<RunStore>((set) => ({
       durationMs:   null,
       error:        null,
     }),
+
+  setNodeOutputs: (outputs) => set({ nodeOutputs: outputs }),
 
   handleEvent: (event) => {
     switch (event.type) {
@@ -119,6 +125,7 @@ export const useRunStore = create<RunStore>((set) => ({
       activeRunId:  null,
       runStatus:    null,
       nodeStatuses: {},
+      nodeOutputs:  {},
       approvalId:   null,
       approvalMsg:  null,
       totalTokens:  0,

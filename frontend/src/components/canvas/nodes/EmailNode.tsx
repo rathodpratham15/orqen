@@ -16,6 +16,7 @@ export function EmailNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>
 
   return (
     <BaseNode
+      nodeId={id}
       accent="email"
       icon={<Mail size={13} className="text-sky-400" />}
       label={label}

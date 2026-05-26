@@ -16,6 +16,7 @@ export function SlackNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>
 
   return (
     <BaseNode
+      nodeId={id}
       accent="slack"
       icon={<MessageSquare size={13} className="text-green-400" />}
       label={label}

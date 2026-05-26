@@ -69,7 +69,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     workflowName,
   } = useEditorStore();
 
-  const { startRun, handleEvent, runStatus, approvalId, approvalMsg } = useRunStore();
+  const { startRun, handleEvent, setNodeOutputs, runStatus, approvalId, approvalMsg } = useRunStore();
 
   // ─── Close SSE stream on unmount ───────────────────────────────────────────
   useEffect(() => {
@@ -120,8 +120,25 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
       // Close any previous stream before opening a new one
       eventSourceRef.current?.close();
 
-      // Subscribe to SSE stream — store handle for cleanup on unmount
-      eventSourceRef.current = api.runs.stream(run.id, handleEvent);
+      // Subscribe to SSE stream — store handle for cleanup on unmount.
+      // After run finishes, do one final GET to pull node outputs into the
+      // canvas so each node can show its result inline.
+      eventSourceRef.current = api.runs.stream(run.id, (event) => {
+        handleEvent(event);
+        if (event.type === "run_completed" || event.type === "run_failed") {
+          api.runs.get(run.id)
+            .then((fullRun) => {
+              const outputs: Record<string, Record<string, unknown>> = {};
+              for (const ne of fullRun.node_executions) {
+                if (ne.output && Object.keys(ne.output).length > 0) {
+                  outputs[ne.node_id] = ne.output;
+                }
+              }
+              setNodeOutputs(outputs);
+            })
+            .catch(console.error);
+        }
+      });
     } catch (err) {
       console.error("Run failed:", err);
     }

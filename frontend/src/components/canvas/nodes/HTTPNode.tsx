@@ -25,6 +25,7 @@ export function HTTPNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>)
 
   return (
     <BaseNode
+      nodeId={id}
       accent="http"
       icon={<Globe size={13} className="text-blue-400" />}
       label={label}

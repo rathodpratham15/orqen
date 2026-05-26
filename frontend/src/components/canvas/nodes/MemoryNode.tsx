@@ -19,6 +19,7 @@ export function MemoryNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>
 
   return (
     <BaseNode
+      nodeId={id}
       accent="memory"
       icon={<Database size={13} className="text-pink-400" />}
       label={label}
