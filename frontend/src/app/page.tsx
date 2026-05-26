@@ -15,12 +15,13 @@ export default function DashboardPage() {
   const router = useRouter();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [error,   setError]       = useState<string | null>(null);
   const [creating, setCreating]   = useState(false);
 
   useEffect(() => {
     api.workflows.list()
       .then(setWorkflows)
-      .catch(console.error)
+      .catch((err) => setError(err.message ?? "Could not reach the server"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -64,6 +65,15 @@ export default function DashboardPage() {
           {[...Array(3)].map((_, i) => (
             <div key={i} className="h-36 rounded-xl bg-[#13131f] border border-[#2a2a40] animate-pulse" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4">
+            <Zap size={24} className="text-red-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-zinc-300">Could not load workflows</h2>
+          <p className="text-sm text-zinc-500 mt-1 mb-2 max-w-xs">{error}</p>
+          <p className="text-xs text-zinc-600">Make sure the backend server is running on port 8000</p>
         </div>
       ) : workflows.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">

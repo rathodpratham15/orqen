@@ -66,6 +66,7 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
     nodes, edges,
     onNodesChange, onEdgesChange, onConnect,
     addNode, selectNode, isDirty, markClean, toDefinition,
+    workflowName,
   } = useEditorStore();
 
   const { startRun, handleEvent, runStatus, approvalId, approvalMsg } = useRunStore();
@@ -99,7 +100,8 @@ export function WorkflowCanvas({ workflowId }: WorkflowCanvasProps) {
   async function handleSave() {
     try {
       const def = toDefinition();
-      await api.workflows.update(workflowId, { definition: def });
+      // Include name so a renamed workflow is persisted along with its definition
+      await api.workflows.update(workflowId, { name: workflowName, definition: def });
       markClean();
     } catch (err) {
       console.error("Save failed:", err);
