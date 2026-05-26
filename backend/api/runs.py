@@ -121,24 +121,51 @@ async def stream_run_events(run_id: uuid.UUID, request: Request):
     Events are published by the Celery worker to Redis channel 'run:{run_id}'.
     """
     async def event_generator() -> AsyncIterator[str]:
-        # ssl_cert_reqs=None required for Upstash rediss:// TLS connections
-        import ssl as _ssl
-        ssl_params = {"ssl_cert_reqs": _ssl.CERT_NONE} if settings.REDIS_URL.startswith("rediss://") else {}
-        client = aioredis.from_url(settings.REDIS_URL, decode_responses=True, **ssl_params)
-        pubsub = client.pubsub()
-        await pubsub.subscribe(f"run:{run_id}")
+        # Flush an SSE comment immediately so the browser receives at least one
+        # chunk; without this, any exception before the first yield causes
+        # ERR_INCOMPLETE_CHUNKED_ENCODING because the HTTP 200 headers are
+        # already sent but no data chunks ever arrive.
+        yield ": connected\n\n"
 
+        # redis-py 5.x SSLConnection accepts ssl_cert_reqs as a string ('none',
+        # 'optional', 'required') and ssl_check_hostname as a bool.
+        # Do NOT pass ssl=SSLContext — that arg isn't accepted by from_url.
+        try:
+            ssl_kwargs = (
+                {"ssl_cert_reqs": "none", "ssl_check_hostname": False}
+                if settings.REDIS_URL.startswith("rediss://")
+                else {}
+            )
+            client = aioredis.from_url(
+                settings.REDIS_URL, decode_responses=True, **ssl_kwargs
+            )
+        except Exception as exc:
+            error_payload = json.dumps({"type": "stream_error", "error": str(exc)})
+            yield f"data: {error_payload}\n\n"
+            return
+
+        pubsub = client.pubsub()
+        try:
+            await pubsub.subscribe(f"run:{run_id}")
+        except Exception as exc:
+            error_payload = json.dumps({"type": "stream_error", "error": f"subscribe failed: {exc}"})
+            yield f"data: {error_payload}\n\n"
+            await client.aclose()
+            return
+
+        keepalive_counter = 0
         try:
             while True:
                 if await request.is_disconnected():
                     break
 
                 message = await pubsub.get_message(
-                    ignore_subscribe_messages=True, timeout=1.0
+                    ignore_subscribe_messages=True, timeout=0.05
                 )
                 if message and message["type"] == "message":
                     data = message["data"]
                     yield f"data: {data}\n\n"
+                    keepalive_counter = 0  # reset on real event
 
                     # Stop streaming once the run reaches a terminal state
                     try:
@@ -150,11 +177,27 @@ async def stream_run_events(run_id: uuid.UUID, request: Request):
                             break
                     except json.JSONDecodeError:
                         pass
+                else:
+                    # Send a keepalive comment every ~15 s (300 × 50 ms) so
+                    # proxies / browsers don't close the idle connection.
+                    keepalive_counter += 1
+                    if keepalive_counter >= 300:
+                        yield ": keepalive\n\n"
+                        keepalive_counter = 0
 
                 await asyncio.sleep(0.05)
+        except Exception as exc:
+            error_payload = json.dumps({"type": "stream_error", "error": str(exc)})
+            yield f"data: {error_payload}\n\n"
         finally:
-            await pubsub.unsubscribe(f"run:{run_id}")
-            await client.aclose()
+            try:
+                await pubsub.unsubscribe(f"run:{run_id}")
+            except Exception:
+                pass
+            try:
+                await client.aclose()
+            except Exception:
+                pass
 
     return StreamingResponse(
         event_generator(),

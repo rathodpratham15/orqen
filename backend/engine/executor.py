@@ -45,11 +45,24 @@ from .nodes.base import NodeStatus
 
 # ─── Redis client for SSE pub/sub ────────────────────────────────────────────
 
-_redis = redis_sync.from_url(
-    settings.REDIS_URL,
-    decode_responses=True,
-    **({"ssl_cert_reqs": ssl.CERT_NONE} if settings.REDIS_URL.startswith("rediss://") else {}),
-)
+def _make_redis_client() -> redis_sync.Redis:
+    """Build a sync Redis client with correct SSL params for redis-py 5.x.
+
+    redis-py 5.x SSLConnection accepts ssl_cert_reqs as a string ('none' /
+    'optional' / 'required') and ssl_check_hostname as a bool.
+    Do NOT pass ssl=SSLContext — that kwarg is not accepted by from_url.
+    """
+    ssl_kwargs = (
+        {"ssl_cert_reqs": "none", "ssl_check_hostname": False}
+        if settings.REDIS_URL.startswith("rediss://")
+        else {}
+    )
+    return redis_sync.from_url(
+        settings.REDIS_URL, decode_responses=True, **ssl_kwargs
+    )
+
+
+_redis = _make_redis_client()
 
 
 def _publish(run_id: str, event: dict[str, Any]) -> None:
