@@ -1,0 +1,218 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import "reactflow/dist/style.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #0a0a0f;
+    color: #f1f5f9;
+}
+
+code,
+pre,
+.font-mono {
+    font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+@layer base {
+    :root {
+        /* Orqen dark theme (forced dark) */
+        --background: 240 17% 5%; /* #0A0A0F */
+        --foreground: 210 40% 96%; /* #F1F5F9 */
+        --card: 240 18% 9%; /* #12121A */
+        --card-foreground: 210 40% 96%;
+        --popover: 240 18% 9%;
+        --popover-foreground: 210 40% 96%;
+        --primary: 262 83% 58%; /* violet #7C3AED */
+        --primary-foreground: 0 0% 100%;
+        --secondary: 240 16% 14%;
+        --secondary-foreground: 210 40% 96%;
+        --muted: 240 16% 14%;
+        --muted-foreground: 215 14% 47%; /* #64748B */
+        --accent: 240 16% 14%;
+        --accent-foreground: 210 40% 96%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 240 22% 15%; /* #1E1E2E */
+        --input: 240 22% 15%;
+        --ring: 262 83% 58%;
+        --radius: 0.5rem;
+
+        /* Orqen status palette */
+        --orqen-violet: #7c3aed;
+        --orqen-violet-2: #6d28d9;
+        --orqen-cyan: #06b6d4;
+        --orqen-success: #10b981;
+        --orqen-warning: #f59e0b;
+        --orqen-error: #ef4444;
+        --orqen-bg: #0a0a0f;
+        --orqen-surface: #12121a;
+        --orqen-border: #1e1e2e;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e1e2e;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #2a2a3e;
+}
+
+/* Pulsing dot for running state */
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(6, 182, 212, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
+    }
+}
+.pulse-cyan {
+    animation: pulse-ring 1.6s infinite;
+}
+
+@keyframes pulse-dot {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
+}
+.pulse-dot {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+/* React Flow dark theme overrides */
+.react-flow__background {
+    background-color: #0a0a0f;
+}
+.react-flow__minimap {
+    background-color: #12121a !important;
+    border: 1px solid #1e1e2e;
+    border-radius: 8px;
+}
+.react-flow__minimap-mask {
+    fill: rgba(10, 10, 15, 0.7);
+}
+.react-flow__controls {
+    background: #12121a;
+    border: 1px solid #1e1e2e;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: none;
+}
+.react-flow__controls-button {
+    background: #12121a;
+    border-bottom: 1px solid #1e1e2e;
+    color: #f1f5f9;
+    fill: #f1f5f9;
+}
+.react-flow__controls-button:hover {
+    background: #1e1e2e;
+}
+.react-flow__edge-path {
+    stroke: #4b5563;
+    stroke-width: 1.8;
+}
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path {
+    stroke: #7c3aed;
+}
+.react-flow__edge.animated .react-flow__edge-path {
+    stroke: #06b6d4;
+    stroke-dasharray: 5;
+    animation: dashdraw 0.5s linear infinite;
+}
+@keyframes dashdraw {
+    to {
+        stroke-dashoffset: -10;
+    }
+}
+.react-flow__handle {
+    width: 10px;
+    height: 10px;
+    background: #12121a;
+    border: 2px solid #7c3aed;
+}
+.react-flow__handle.handle-true {
+    border-color: #10b981;
+}
+.react-flow__handle.handle-false {
+    border-color: #ef4444;
+}
+.react-flow__attribution {
+    background: transparent;
+    color: #475569;
+}
+.react-flow__edge-textbg {
+    fill: #12121a;
+}
+.react-flow__edge-text {
+    fill: #f1f5f9;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+.shimmer {
+    background: linear-gradient(90deg, #12121a 0%, #1e1e2e 50%, #12121a 100%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+}
+
+/* JSON block syntax-ish coloring (very light) */
+.json-block {
+    background: #0a0a0f;
+    border: 1px solid #1e1e2e;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    color: #cbd5e1;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+}

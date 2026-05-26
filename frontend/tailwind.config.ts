@@ -10,12 +10,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Orqen design system
-        canvas:  "#0d0d14",
-        surface: "#13131f",
+        // Orqen raw design tokens
+        canvas:  "#0A0A0F",
+        surface: "#12121A",
         panel:   "#1a1a2e",
         border:  "#2a2a40",
         muted:   "#3a3a55",
+        // CSS-variable aliases (used by shadcn/ui components)
+        background:  "var(--background)",
+        foreground:  "var(--foreground)",
+        primary: {
+          DEFAULT:    "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT:    "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        destructive: {
+          DEFAULT:    "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+        accent: {
+          DEFAULT:    "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
         // Node type accents
         "node-llm":       "#7c3aed",
         "node-http":      "#2563eb",
@@ -25,24 +44,39 @@ const config: Config = {
         "node-email":     "#0284c7",
         "node-code":      "#ea580c",
         // Run statuses
-        "status-running": "#3b82f6",
-        "status-success": "#16a34a",
-        "status-failed":  "#dc2626",
-        "status-paused":  "#f59e0b",
+        "status-running": "#06B6D4",
+        "status-success": "#10B981",
+        "status-failed":  "#EF4444",
+        "status-paused":  "#F59E0B",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       animation: {
         "pulse-ring": "pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "fade-in":    "fadeIn 0.2s ease-in-out",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up":   "accordion-up 0.2s ease-out",
       },
       keyframes: {
         fadeIn: {
           "0%":   { opacity: "0", transform: "translateY(4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "accordion-down": {
+          from: { height: "0" },
+          to:   { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to:   { height: "0" },
+        },
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };
 
 export default config;

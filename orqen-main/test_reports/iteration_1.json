@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only UI testing of Orqen Workflow OS. Core flows render and most features work: Dashboard grid (3 workflows), search/filter pills, New Workflow modal + create, 3-dot menu opens (Edit/Duplicate/Delete visible), active toggle, sidebar nav across /, /runs, /approvals, /analytics, Runs list (4 rows), Run Detail pages for success/running/paused/failed all load, Analytics charts render (recharts bars + pie sectors + top workflows table), Editor at /editor/wf_support_triage shows 3-column layout with palette + react-flow canvas (6 nodes) + config panel, clicking a node opens config form, editing name field works. However, many interactive elements are MISSING the data-testid attributes the spec promised, which (a) violates the testability requirement, and (b) blocked deeper automated verification of several flows. UI itself looks visually correct in the screenshots.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Dashboard search input", "issue": "Missing data-testid='dashboard-search' on the 'Search workflows...' input", "selector": "input[placeholder='Search workflows...']", "priority": "MEDIUM"},
+      {"component": "Workflow card 3-dot menu items", "issue": "Dropdown opens and shows Edit/Duplicate/Delete, but menu items lack data-testid='workflow-edit-<id>' / 'workflow-duplicate-<id>' / 'workflow-delete-<id>'. Duplicate click could not be auto-targeted; also overlay intercepts pointer events when fallback selectors are used.", "selector": "[data-testid='workflow-duplicate-wf_support_triage']", "priority": "MEDIUM"},
+      {"component": "Runs page View action", "issue": "Missing data-testid='run-view-<runId>' on the View button/link per spec. Rows have run-row-<id> but the View action itself is unselectable by spec id.", "selector": "[data-testid='run-view-run_abc123']", "priority": "MEDIUM"},
+      {"component": "RunDetail Live SSE indicator", "issue": "The text 'Live' renders for run_live01 but the element lacks data-testid='live-badge'", "selector": "[data-testid='live-badge']", "priority": "LOW"},
+      {"component": "RunDetail paused approval panel", "issue": "Missing data-testid='approval-approve-btn' and 'approval-reject-btn' on the in-page side panel buttons for run_paused1", "selector": "[data-testid='approval-approve-btn']", "priority": "MEDIUM"},
+      {"component": "RunDetail failed view", "issue": "Stack trace text ('evaluateOperand') not visible on initial load of /runs/run_failed1 — likely behind an Error tab that is not selected by default; please verify default tab or auto-select error tab when run.status==='failed'.", "selector": "n/a", "priority": "MEDIUM"},
+      {"component": "Approvals page", "issue": "Cards do not expose data-testid='approval-card-<id>' nor 'approval-approve-<id>' / 'approval-reject-<id>'. Could not auto-verify Approve/Reject flow; page renders visually but counts returned 0 for testid query.", "selector": "[data-testid^='approval-card-']", "priority": "HIGH"},
+      {"component": "Analytics stat cards", "issue": "Missing data-testid='stat-card-<key>' on the 4 KPI cards (totalRuns, successRate, totalTokens, totalCost). Charts and table render correctly.", "selector": "[data-testid^='stat-card-']", "priority": "LOW"},
+      {"component": "Editor toolbar", "issue": "Save and Run buttons in editor header appear visually but data-testid='editor-save-btn' / 'editor-run-btn' / 'config-delete-btn' could not be queried — likely missing. Could not auto-verify save toast, mock streaming run, and delete-node behaviours.", "selector": "[data-testid='editor-save-btn']", "priority": "HIGH"}
+    ],
+    "integration_issues": [
+      {"flow": "Workflow Run from Dashboard → /runs/[id]", "issue": "Could not auto-verify navigation because the test got stuck on the missing dropdown item testid before reaching the Run button click; visually the Run button is present on each card.", "affected_selectors": ["[data-testid='workflow-run-wf_support_triage']"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Add data-testid attributes per the spec to: Dashboard search input (dashboard-search); workflow card menu items (workflow-edit-<id>, workflow-duplicate-<id>, workflow-delete-<id>); Runs page row View link (run-view-<runId>); RunDetail Live badge (live-badge); RunDetail paused approve/reject buttons (approval-approve-btn, approval-reject-btn); Approvals page cards and buttons (approval-card-<id>, approval-approve-<id>, approval-reject-<id>, approvals-tab-pending, approvals-tab-resolved); Analytics stat cards (stat-card-totalRuns etc.); Editor toolbar (editor-save-btn, editor-run-btn, config-delete-btn).",
+    "Ensure /runs/run_failed1 shows the error/stack-trace tab by default (or auto-select it when status==='failed') so users immediately see the failure cause.",
+    "Verify dropdown menu items are not blocked by an invisible overlay — automated clicks against the visible 'Duplicate' text consistently failed with 'html intercepts pointer events'. This is likely a Radix portal z-index/pointer-events issue.",
+    "Re-run end-to-end automated tests once testids are added to validate: card duplicate, delete confirm modal, run-from-card navigation, editor save toast, editor mock streaming (cyan→green), editor node delete, approvals Approve/Reject + tab switching."
+  ],
+  "critical_code_review_comments": [
+    "data-testid coverage is inconsistent across pages despite being explicitly requested in the prompt. Some elements have them (workflow-card-<id>, workflow-menu-<id>, workflow-toggle-<id>, new-workflow-btn, new-wf-name, filter-all/active/inactive, nav-*, run-row-<id>, config-node-name, node-palette, config-panel) but several interactive elements that the spec calls out are missing them. This should be standardised.",
+    "Dropdown overlay intercepts pointer events for automated tooling — consider Radix DropdownMenu Portal + correct z-index, or add testids that map directly to items.",
+    "/runs/run_failed1 should default to the Error/Stack tab when status==='failed' so the trace is visible without an extra click."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a", "frontend": "~65% (core rendering & navigation OK; many flows un-verifiable due to missing testids)" },
+  "test_credentials": "none required (frontend-only with mock data)",
+  "seed_data_creation": "Created one transient workflow 'TEST_WF_New' via the New Workflow modal during the run. It is held only in React state and is gone on reload — no cleanup needed.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "After main agent adds the missing data-testid attributes listed in action_items, re-run a full Playwright sweep: (1) Dashboard duplicate + delete-with-confirm + run-navigation; (2) Editor save toast + mock streaming run (expect node statuses to advance cyan→green and final 'Success' badge after ~6-9s) + node delete; (3) Approvals approve+reject and Pending/Resolved tab switching; (4) RunDetail /runs/run_failed1 stack-trace visibility; (5) /runs/run_live01 watch nodes advance every ~1.5s via setInterval+advanceRun. All pages were reachable; no JS page errors were captured in this run."
+}
