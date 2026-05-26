@@ -58,6 +58,20 @@ export function ConfigPanel() {
 
       {/* Scrollable fields */}
       <div className="flex flex-col gap-3 p-3 overflow-y-auto flex-1">
+        {/* Node ID — shown so users can reference it in {{ }} templates */}
+        <div>
+          <p className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600 mb-1">
+            Node ID <span className="normal-case font-normal text-zinc-700">(use in templates)</span>
+          </p>
+          <button
+            onClick={() => navigator.clipboard?.writeText(id)}
+            title="Click to copy"
+            className="w-full text-left font-mono text-[9px] text-zinc-500 bg-[#0d0d14] border border-[#2a2a40] rounded px-2 py-1 truncate hover:text-zinc-300 hover:border-[#4a4a70] transition-colors"
+          >
+            {id}
+          </button>
+        </div>
+
         {/* Label */}
         <Field label="Label">
           <Input
