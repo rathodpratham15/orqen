@@ -22,6 +22,7 @@ export function CodeNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>)
 
   return (
     <BaseNode
+      nodeId={id}
       accent="code"
       icon={<Terminal size={13} className="text-orange-400" />}
       label={label}

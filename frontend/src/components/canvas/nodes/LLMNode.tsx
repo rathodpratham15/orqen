@@ -16,6 +16,7 @@ export function LLMNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>) 
 
   return (
     <BaseNode
+      nodeId={id}
       accent="llm"
       icon={<Sparkles size={13} className="text-purple-400" />}
       label={label}

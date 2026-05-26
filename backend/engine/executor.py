@@ -28,13 +28,12 @@ from collections import deque
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
-import ssl
-
 import redis as redis_sync
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.pool import NullPool
 
 from config import settings
-from database import async_session_factory
 from models import Workflow, WorkflowRun, NodeExecution, ApprovalRequest, WorkflowSchedule
 from workers import celery_app
 from .graph import WorkflowGraph
@@ -69,6 +68,33 @@ def _publish(run_id: str, event: dict[str, Any]) -> None:
     """Publish a run event to Redis. The SSE endpoint subscribes to this channel."""
     channel = f"run:{run_id}"
     _redis.publish(channel, json.dumps(event))
+
+
+# ─── Per-task async DB session factory ───────────────────────────────────────
+
+def _worker_session_factory() -> async_sessionmaker:
+    """Return a fresh async_sessionmaker backed by a NullPool engine.
+
+    WHY NullPool:
+      The module-level async_session_factory in database.py binds its connection
+      pool to the event loop created by the first asyncio.run() call. Celery
+      prefork workers execute each task in a *new* event loop (a fresh asyncio.run()
+      call), so any pooled connection from a prior loop raises:
+
+          RuntimeError: got Future <…> attached to a different loop
+
+      NullPool disables connection reuse entirely — every `async with session:`
+      acquires a brand-new connection and releases it on exit. This is slightly
+      slower (one extra TCP round-trip per task), but correct and safe in a
+      prefork environment. Tasks are typically seconds-to-minutes long, so the
+      overhead is negligible.
+    """
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        poolclass=NullPool,
+        connect_args={"statement_cache_size": 0},
+    )
+    return async_sessionmaker(engine, expire_on_commit=False)
 
 
 # ─── Celery tasks ─────────────────────────────────────────────────────────────
@@ -127,7 +153,7 @@ async def _execute_run(run_id: str, resume_from: str | None) -> None:
     Core execution function. Traverses the workflow DAG using BFS.
     Handles node dispatch, retries, pause/resume, and run completion.
     """
-    async with async_session_factory() as session:
+    async with _worker_session_factory()() as session:
         # ── Load run ──────────────────────────────────────────────────────────
         run = await session.get(WorkflowRun, uuid.UUID(run_id))
         if not run:
@@ -334,7 +360,7 @@ async def _poll_schedules() -> None:
 
     now = datetime.now(timezone.utc)
 
-    async with async_session_factory() as session:
+    async with _worker_session_factory()() as session:
         result = await session.execute(
             select(WorkflowSchedule).where(
                 WorkflowSchedule.is_active == True,

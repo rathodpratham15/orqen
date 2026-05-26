@@ -17,6 +17,7 @@ export function ConditionNode({ data, id, selected }: NodeProps<Node<OrqenNodeDa
 
   return (
     <BaseNode
+      nodeId={id}
       accent="condition"
       icon={<GitBranch size={13} className="text-amber-400" />}
       label={label}

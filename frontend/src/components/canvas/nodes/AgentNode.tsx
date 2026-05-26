@@ -17,6 +17,7 @@ export function AgentNode({ data, id, selected }: NodeProps<Node<OrqenNodeData>>
 
   return (
     <BaseNode
+      nodeId={id}
       accent="agent"
       icon={<Bot size={13} className="text-violet-400" />}
       label={label}

@@ -18,6 +18,7 @@ export function ApprovalNode({ data, id, selected }: NodeProps<Node<OrqenNodeDat
 
   return (
     <BaseNode
+      nodeId={id}
       accent="approval"
       icon={<ShieldCheck size={13} className="text-teal-400" />}
       label={label}
