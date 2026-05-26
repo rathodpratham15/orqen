@@ -13,6 +13,15 @@ import type { WorkflowRun, RunStatus, Workflow } from "@/lib/types";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+function Pill({ label, value, color = "text-slate-300" }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-md border border-[#1E1E2E] bg-[#12121A] px-3 py-1.5">
+      <span className="text-slate-500">{label}</span>
+      <span className={`font-semibold font-mono ${color}`}>{value}</span>
+    </div>
+  );
+}
+
 function fmtRelative(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   if (diff < 60_000)    return "just now";
@@ -65,6 +74,15 @@ export default function RunsPage() {
       return true;
     });
   }, [runs, wfFilter, statusTab]);
+
+  const totals = useMemo(() => ({
+    runs:       filtered.length,
+    tokens:     filtered.reduce((s, r) => s + (r.total_tokens ?? 0), 0),
+    cost:       filtered.reduce((s, r) => s + (r.estimated_cost_usd ?? 0), 0),
+    duration_ms:filtered.reduce((s, r) => s + (r.duration_ms ?? 0), 0),
+    success:    filtered.filter((r) => r.status === "success").length,
+    failed:     filtered.filter((r) => r.status === "failed").length,
+  }), [filtered]);
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8 max-w-[1400px] mx-auto w-full" data-testid="runs-page">
@@ -119,8 +137,22 @@ export default function RunsPage() {
         </div>
       </div>
 
+      {/* Summary pills */}
+      {!loading && totals.runs > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <Pill label="Runs"     value={String(totals.runs)} />
+          <Pill label="Success"  value={String(totals.success)} color="text-emerald-400" />
+          {totals.failed > 0 && (
+            <Pill label="Failed" value={String(totals.failed)} color="text-red-400" />
+          )}
+          <Pill label="Tokens"   value={formatTokens(totals.tokens)} />
+          <Pill label="Cost"     value={formatCost(totals.cost)} />
+          <Pill label="Total time" value={formatDuration(totals.duration_ms)} />
+        </div>
+      )}
+
       {/* Table */}
-      <div className="mt-6 overflow-hidden rounded-lg border border-[#1E1E2E] bg-[#12121A]">
+      <div className="mt-4 overflow-hidden rounded-lg border border-[#1E1E2E] bg-[#12121A]">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 size={24} className="animate-spin text-zinc-600" />
@@ -208,6 +240,35 @@ export default function RunsPage() {
                 })
               )}
             </tbody>
+
+            {/* ── Totals footer ───────────────────────────────────────── */}
+            {filtered.length > 1 && (
+              <tfoot>
+                <tr className="border-t-2 border-[#2a2a40] bg-[#0d0d14] text-[11px] font-semibold text-slate-400">
+                  <td className="px-4 py-2.5 uppercase tracking-wider text-slate-500">
+                    {totals.runs} runs
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <span className="text-emerald-500">{totals.success} ✓</span>
+                    {totals.failed > 0 && (
+                      <span className="ml-2 text-red-500">{totals.failed} ✗</span>
+                    )}
+                  </td>
+                  <td />
+                  <td />
+                  <td className="px-4 py-2.5 font-mono text-slate-300">
+                    {formatDuration(totals.duration_ms)}
+                  </td>
+                  <td className="px-4 py-2.5 font-mono text-slate-300">
+                    {formatTokens(totals.tokens)}
+                  </td>
+                  <td className="px-4 py-2.5 font-mono text-slate-300">
+                    {formatCost(totals.cost)}
+                  </td>
+                  <td />
+                </tr>
+              </tfoot>
+            )}
           </table>
         )}
       </div>
