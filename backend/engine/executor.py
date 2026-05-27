@@ -30,6 +30,7 @@ from typing import Any
 
 import redis as redis_sync
 from sqlalchemy import select
+from sqlalchemy import select as sa_select  # alias used in api-key loader
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -165,6 +166,23 @@ async def _execute_run(run_id: str, resume_from: str | None) -> None:
             _publish(run_id, {"type": "run_failed", "error": "Workflow not found"})
             return
 
+        # ── Load user API keys (decrypt for use in node executors) ────────────
+        user_api_keys: dict[str, str] = {}
+        try:
+            from models import UserAPIKey
+            from api.settings import _decrypt
+            user_uuid = __import__("uuid").UUID(workflow.user_id)
+            keys_result = await session.execute(
+                sa_select(UserAPIKey).where(UserAPIKey.user_id == user_uuid)
+            )
+            for uak in keys_result.scalars().all():
+                try:
+                    user_api_keys[uak.provider] = _decrypt(uak.encrypted_key)
+                except Exception:
+                    pass  # skip corrupted key
+        except (ValueError, Exception):
+            pass  # user_id isn't a UUID (e.g. legacy "dev-user" data)
+
         # ── Mark running ──────────────────────────────────────────────────────
         run.status = "running"
         if not run.started_at:
@@ -184,11 +202,15 @@ async def _execute_run(run_id: str, resume_from: str | None) -> None:
         # ── Restore or create execution context ───────────────────────────────
         if resume_from and run.context:
             context = ExecutionContext.from_dict(run.context)
+            # Re-inject API keys after deserialization (they're excluded from
+            # to_dict() for security and must be reloaded from the DB each time)
+            context.api_keys = user_api_keys
         else:
             context = ExecutionContext(
                 run_id=run_id,
                 workflow_id=str(run.workflow_id),
                 trigger_data=run.trigger_data or {},
+                api_keys=user_api_keys,
             )
 
         # ── Determine start nodes ─────────────────────────────────────────────

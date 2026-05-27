@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Layers, Play, CheckSquare, BarChart2, Settings } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Layers, Play, CheckSquare, BarChart2, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   Tooltip,
   TooltipContent,
@@ -16,10 +17,19 @@ const NAV = [
   { href: "/runs",      icon: Play,        label: "Runs",         testid: "nav-runs"      },
   { href: "/approvals", icon: CheckSquare, label: "Approvals",    testid: "nav-approvals" },
   { href: "/analytics", icon: BarChart2,   label: "Observability",testid: "nav-analytics" },
+  { href: "/settings",  icon: Settings,    label: "Settings",     testid: "nav-settings"  },
 ];
 
 export function Sidebar() {
-  const path = usePathname();
+  const path   = usePathname();
+  const router = useRouter();
+  const user   = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  function handleLogout() {
+    logout();
+    router.replace("/login");
+  }
 
   return (
     <aside
@@ -61,18 +71,36 @@ export function Sidebar() {
         </TooltipProvider>
       </div>
 
+      {/* Bottom: user avatar + logout */}
       <TooltipProvider delayDuration={120}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              data-testid="nav-settings"
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-colors"
-            >
-              <Settings className="h-5 w-5" strokeWidth={1.8} />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right">Settings</TooltipContent>
-        </Tooltip>
+        <div className="flex flex-col items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleLogout}
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                data-testid="logout-btn"
+              >
+                <LogOut className="h-4 w-4" strokeWidth={1.8} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Sign out</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-violet-800 cursor-default select-none">
+                <span className="text-xs font-bold text-white">
+                  {user?.name?.[0]?.toUpperCase() ?? "?"}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p className="font-medium">{user?.name}</p>
+              <p className="text-xs text-zinc-400">{user?.email}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </TooltipProvider>
     </aside>
   );

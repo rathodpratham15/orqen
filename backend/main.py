@@ -12,6 +12,8 @@ from api.workflows import router as workflows_router
 from api.runs import router as runs_router
 from api.approvals import router as approvals_router
 from api.analytics import router as analytics_router
+from api.auth import router as auth_router
+from api.settings import router as settings_router
 
 
 @asynccontextmanager
@@ -21,14 +23,13 @@ async def lifespan(app: FastAPI):
         async with async_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
     yield
-    # Shutdown: dispose engine
     await async_engine.dispose()
 
 
 app = FastAPI(
     title="Orqen",
     description="AI Workflow Operating System — orchestrate agents, tools, and integrations visually.",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
     debug=settings.APP_ENV == "development",
 )
@@ -42,12 +43,14 @@ app.add_middleware(
 )
 
 # Routers
-app.include_router(workflows_router, prefix="/api/workflows", tags=["Workflows"])
-app.include_router(runs_router, prefix="/api/runs", tags=["Runs"])
-app.include_router(approvals_router, prefix="/api/approvals", tags=["Approvals"])
-app.include_router(analytics_router, prefix="/api/analytics", tags=["Analytics"])
+app.include_router(auth_router,      prefix="/api/auth",      tags=["Auth"])
+app.include_router(settings_router,  prefix="/api/settings",  tags=["Settings"])
+app.include_router(workflows_router, prefix="/api/workflows",  tags=["Workflows"])
+app.include_router(runs_router,      prefix="/api/runs",       tags=["Runs"])
+app.include_router(approvals_router, prefix="/api/approvals",  tags=["Approvals"])
+app.include_router(analytics_router, prefix="/api/analytics",  tags=["Analytics"])
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "0.1.0"}
+    return {"status": "ok", "version": "0.2.0"}

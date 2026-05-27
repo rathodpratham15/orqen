@@ -1,4 +1,5 @@
 from .workflow import Workflow, WorkflowRun, NodeExecution, ApprovalRequest, WorkflowSchedule, AgentMemory
+from .user import User, UserAPIKey
 
 __all__ = [
     "Workflow",
@@ -7,4 +8,6 @@ __all__ = [
     "ApprovalRequest",
     "WorkflowSchedule",
     "AgentMemory",
+    "User",
+    "UserAPIKey",
 ]
