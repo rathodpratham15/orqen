@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -13,11 +13,16 @@ import { api } from "@/lib/api";
  * We store the token in Zustand (localStorage) and navigate to the app.
  *
  * Also handles ?error=<msg> from the backend if OAuth fails.
+ *
+ * NOTE: useSearchParams() must be inside a <Suspense> boundary or Next.js
+ * will error during static generation ("missing-suspense-with-csr-bailout").
+ * The outer page exports a Suspense wrapper; the logic lives in <CallbackInner>.
  */
-export default function OAuthCallbackPage() {
-  const router       = useRouter();
-  const params       = useSearchParams();
-  const setAuth      = useAuthStore((s) => s.setAuth);
+
+function CallbackInner() {
+  const router        = useRouter();
+  const params        = useSearchParams();
+  const setAuth       = useAuthStore((s) => s.setAuth);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -85,5 +90,23 @@ export default function OAuthCallbackPage() {
       <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
       <p className="text-sm text-slate-400">Completing sign-in…</p>
     </div>
+  );
+}
+
+// Spinner shown while CallbackInner suspends (during static generation)
+function LoadingFallback() {
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+      <p className="text-sm text-slate-400">Loading…</p>
+    </div>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CallbackInner />
+    </Suspense>
   );
 }
