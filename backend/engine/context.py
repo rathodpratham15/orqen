@@ -35,12 +35,16 @@ class ExecutionContext:
         run_id: str,
         workflow_id: str,
         trigger_data: dict[str, Any] | None = None,
+        api_keys: dict[str, str] | None = None,
     ) -> None:
         self.run_id = run_id
         self.workflow_id = workflow_id
         self.trigger_data: dict[str, Any] = trigger_data or {}
         self.node_outputs: dict[str, Any] = {}   # node_id → output dict
         self.variables: dict[str, Any] = {}      # workflow-level variables
+        # Provider → plain-text API key (loaded from UserAPIKey at run start)
+        # Falls back to settings.* env vars when empty.
+        self.api_keys: dict[str, str] = api_keys or {}
 
     # ─── Output management ───────────────────────────────────────────────────
 
@@ -49,6 +53,24 @@ class ExecutionContext:
 
     def get_output(self, node_id: str) -> dict[str, Any] | None:
         return self.node_outputs.get(node_id)
+
+    def get_api_key(self, provider: str) -> str:
+        """
+        Return the API key for a provider.
+        Prefers the user's own key; falls back to the server-level env var.
+        """
+        from config import settings
+
+        if self.api_keys.get(provider):
+            return self.api_keys[provider]
+
+        fallbacks = {
+            "anthropic": settings.ANTHROPIC_API_KEY,
+            "openai":    settings.OPENAI_API_KEY,
+            "google":    settings.GOOGLE_API_KEY,
+            "groq":      settings.GROQ_API_KEY,
+        }
+        return fallbacks.get(provider, "")
 
     # ─── Variable resolution ─────────────────────────────────────────────────
 
@@ -75,7 +97,7 @@ class ExecutionContext:
             path = match.group(1).strip()
             resolved = self._lookup(path)
             if resolved is None:
-                return match.group(0)          # leave unresolved refs as-is
+                return match.group(0)
             if isinstance(resolved, (dict, list)):
                 import json
                 return json.dumps(resolved)
@@ -117,11 +139,13 @@ class ExecutionContext:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "run_id": self.run_id,
-            "workflow_id": self.workflow_id,
+            "run_id":       self.run_id,
+            "workflow_id":  self.workflow_id,
             "trigger_data": self.trigger_data,
             "node_outputs": self.node_outputs,
-            "variables": self.variables,
+            "variables":    self.variables,
+            # NOTE: api_keys are NOT serialized (security) — they are reloaded
+            # from the DB each time a paused run is resumed.
         }
 
     @classmethod

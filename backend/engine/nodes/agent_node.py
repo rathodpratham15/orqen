@@ -272,12 +272,15 @@ class AgentNode(BaseNode):
     """
     node_type = "agent"
 
-    def __init__(self) -> None:
-        self._client = anthropic.AsyncAnthropic(
-            api_key=settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY", "")
-        )
-
     async def execute(self, config: dict[str, Any], context) -> NodeResult:
+        api_key = context.get_api_key("anthropic")
+        if not api_key:
+            return NodeResult.failure(
+                "Agent node requires an Anthropic API key. "
+                "Add your key in Settings → API Keys."
+            )
+        client = anthropic.AsyncAnthropic(api_key=api_key)
+
         # ── Config ─────────────────────────────────────────────────────────
         goal           = config.get("goal", "").strip()
         system_prompt  = config.get(
@@ -337,7 +340,7 @@ class AgentNode(BaseNode):
                 if tools:
                     kwargs["tools"] = tools
 
-                response = await self._client.messages.create(**kwargs)
+                response = await client.messages.create(**kwargs)
 
             except anthropic.AuthenticationError:
                 return NodeResult.failure("Invalid Anthropic API key")

@@ -84,16 +84,68 @@ export function ConfigPanel() {
         {/* Type-specific fields */}
         {nodeType === "llm" && (
           <>
-            <Field label="Model">
+            <Field label="Provider">
               <select
-                value={(config.model as string) ?? "claude-sonnet-4-6"}
-                onChange={(e) => set("model", e.target.value)}
+                value={(config.provider as string) ?? "anthropic"}
+                onChange={(e) => {
+                  const prov = e.target.value;
+                  set("provider", prov);
+                  // Reset model to provider default
+                  const defaults: Record<string, string> = {
+                    anthropic: "claude-sonnet-4-6",
+                    openai:    "gpt-4o",
+                    google:    "gemini-2.0-flash",
+                    groq:      "llama-3.3-70b-versatile",
+                  };
+                  set("model", defaults[prov] ?? "");
+                }}
                 className="w-full bg-[#1a1a2e] border border-[#2a2a40] rounded px-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-[#4a4a70]"
               >
-                <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
-                <option value="claude-opus-4-7">claude-opus-4-7</option>
-                <option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="openai">OpenAI (GPT)</option>
+                <option value="google">Google (Gemini)</option>
+                <option value="groq">Groq (Llama / Mixtral)</option>
               </select>
+            </Field>
+            <Field label="Model">
+              {(() => {
+                const prov = (config.provider as string) ?? "anthropic";
+                const modelsByProvider: Record<string, { value: string; label: string }[]> = {
+                  anthropic: [
+                    { value: "claude-sonnet-4-6",         label: "Claude Sonnet 4.6" },
+                    { value: "claude-opus-4-7",            label: "Claude Opus 4.7" },
+                    { value: "claude-haiku-4-5-20251001",  label: "Claude Haiku 4.5" },
+                  ],
+                  openai: [
+                    { value: "gpt-4o",       label: "GPT-4o" },
+                    { value: "gpt-4o-mini",  label: "GPT-4o mini" },
+                    { value: "gpt-4-turbo",  label: "GPT-4 Turbo" },
+                    { value: "gpt-3.5-turbo",label: "GPT-3.5 Turbo" },
+                  ],
+                  google: [
+                    { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
+                    { value: "gemini-1.5-pro",   label: "Gemini 1.5 Pro" },
+                    { value: "gemini-1.5-flash",  label: "Gemini 1.5 Flash" },
+                  ],
+                  groq: [
+                    { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" },
+                    { value: "mixtral-8x7b-32768",       label: "Mixtral 8x7B" },
+                    { value: "gemma2-9b-it",             label: "Gemma 2 9B" },
+                  ],
+                };
+                const models = modelsByProvider[prov] ?? modelsByProvider["anthropic"];
+                return (
+                  <select
+                    value={(config.model as string) ?? models[0].value}
+                    onChange={(e) => set("model", e.target.value)}
+                    className="w-full bg-[#1a1a2e] border border-[#2a2a40] rounded px-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-[#4a4a70]"
+                  >
+                    {models.map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                );
+              })()}
             </Field>
             <Field label="System prompt">
               <Textarea

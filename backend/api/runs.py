@@ -18,27 +18,21 @@ from database import get_db
 from models import Workflow, WorkflowRun
 from schemas import TriggerRunRequest, WorkflowRunResponse
 from engine.executor import execute_workflow_task
+from api.deps import CurrentUser, DBDep
 
 router = APIRouter()
-
-
-def get_current_user_id() -> str:
-    return "dev-user"
-
-UserDep = Annotated[str, Depends(get_current_user_id)]
-DBDep   = Annotated[AsyncSession, Depends(get_db)]
 
 
 @router.post("/{workflow_id}/run", response_model=WorkflowRunResponse, status_code=202)
 async def trigger_run(
     workflow_id: uuid.UUID,
     body: TriggerRunRequest,
-    user_id: UserDep,
+    current_user: CurrentUser,
     db: DBDep,
 ):
     """Enqueue a workflow run. Returns immediately; execution is async."""
     wf = await db.get(Workflow, workflow_id)
-    if not wf or wf.user_id != user_id:
+    if not wf or wf.user_id != str(current_user.id):
         raise HTTPException(status_code=404, detail="Workflow not found")
     if not wf.is_active:
         raise HTTPException(status_code=400, detail="Workflow is inactive")
@@ -70,7 +64,7 @@ async def trigger_run(
 
 @router.get("", response_model=list[WorkflowRunResponse])
 async def list_runs(
-    user_id: UserDep,
+    current_user: CurrentUser,
     db: DBDep,
     workflow_id: uuid.UUID | None = None,
     status: str | None = None,
@@ -80,7 +74,7 @@ async def list_runs(
     query = (
         select(WorkflowRun)
         .join(Workflow)
-        .where(Workflow.user_id == user_id)
+        .where(Workflow.user_id == str(current_user.id))
         .options(selectinload(WorkflowRun.node_executions))
         .order_by(WorkflowRun.created_at.desc())
         .limit(limit)
@@ -95,14 +89,14 @@ async def list_runs(
 
 
 @router.get("/{run_id}", response_model=WorkflowRunResponse)
-async def get_run(run_id: uuid.UUID, user_id: UserDep, db: DBDep):
+async def get_run(run_id: uuid.UUID, current_user: CurrentUser, db: DBDep):
     """Get a run with its full node execution trace."""
     result = await db.execute(
         select(WorkflowRun)
         .options(selectinload(WorkflowRun.node_executions))
         .where(WorkflowRun.id == run_id)
         .join(Workflow)
-        .where(Workflow.user_id == user_id)
+        .where(Workflow.user_id == str(current_user.id))
     )
     run = result.scalar_one_or_none()
     if not run:
@@ -121,15 +115,8 @@ async def stream_run_events(run_id: uuid.UUID, request: Request):
     Events are published by the Celery worker to Redis channel 'run:{run_id}'.
     """
     async def event_generator() -> AsyncIterator[str]:
-        # Flush an SSE comment immediately so the browser receives at least one
-        # chunk; without this, any exception before the first yield causes
-        # ERR_INCOMPLETE_CHUNKED_ENCODING because the HTTP 200 headers are
-        # already sent but no data chunks ever arrive.
         yield ": connected\n\n"
 
-        # redis-py 5.x SSLConnection accepts ssl_cert_reqs as a string ('none',
-        # 'optional', 'required') and ssl_check_hostname as a bool.
-        # Do NOT pass ssl=SSLContext — that arg isn't accepted by from_url.
         try:
             ssl_kwargs = (
                 {"ssl_cert_reqs": "none", "ssl_check_hostname": False}
@@ -165,9 +152,8 @@ async def stream_run_events(run_id: uuid.UUID, request: Request):
                 if message and message["type"] == "message":
                     data = message["data"]
                     yield f"data: {data}\n\n"
-                    keepalive_counter = 0  # reset on real event
+                    keepalive_counter = 0
 
-                    # Stop streaming once the run reaches a terminal state
                     try:
                         event = json.loads(data)
                         if event.get("type") in {
@@ -178,8 +164,6 @@ async def stream_run_events(run_id: uuid.UUID, request: Request):
                     except json.JSONDecodeError:
                         pass
                 else:
-                    # Send a keepalive comment every ~15 s (300 × 50 ms) so
-                    # proxies / browsers don't close the idle connection.
                     keepalive_counter += 1
                     if keepalive_counter >= 300:
                         yield ": keepalive\n\n"

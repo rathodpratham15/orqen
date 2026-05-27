@@ -1,3 +1,23 @@
+// ─── Auth types ───────────────────────────────────────────────────────────────
+
+export interface User {
+  id:    string;
+  email: string;
+  name:  string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user:  User;
+}
+
+export interface APIKeyStatus {
+  provider:   string;
+  is_set:     boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 // ─── Workflow graph types ─────────────────────────────────────────────────────
 
 export type NodeType = "llm" | "http" | "condition" | "approval" | "slack" | "email" | "code" | "agent" | "memory";

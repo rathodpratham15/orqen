@@ -4,26 +4,18 @@ Analytics endpoints — aggregate stats for the observability dashboard.
 from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
-from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from sqlalchemy import select, func, case
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import get_db
 from models import Workflow, WorkflowRun
+from api.deps import CurrentUser, DBDep
 
 router = APIRouter()
 
-DBDep = Annotated[AsyncSession, Depends(get_db)]
-
-
-def get_current_user_id() -> str:
-    return "dev-user"
-
 
 @router.get("/stats")
-async def get_stats(db: DBDep):
+async def get_stats(db: DBDep, current_user: CurrentUser):
     """
     Aggregate metrics across all runs for the current user.
 
@@ -34,6 +26,7 @@ async def get_stats(db: DBDep):
       - Average duration of successful runs (ms)
       - Top 5 workflows by token usage
     """
+    user_id = str(current_user.id)
     now = datetime.now(timezone.utc)
     since_24h = now - timedelta(hours=24)
 
@@ -41,7 +34,7 @@ async def get_stats(db: DBDep):
     status_counts_q = await db.execute(
         select(WorkflowRun.status, func.count().label("count"))
         .join(Workflow)
-        .where(Workflow.user_id == "dev-user")
+        .where(Workflow.user_id == user_id)
         .group_by(WorkflowRun.status)
     )
     status_rows = status_counts_q.all()
@@ -58,7 +51,7 @@ async def get_stats(db: DBDep):
             func.coalesce(func.sum(WorkflowRun.estimated_cost_usd), 0.0).label("cost"),
         )
         .join(Workflow)
-        .where(Workflow.user_id == "dev-user")
+        .where(Workflow.user_id == user_id)
     )
     totals = totals_q.one()
 
@@ -68,7 +61,7 @@ async def get_stats(db: DBDep):
         .select_from(WorkflowRun)
         .join(Workflow)
         .where(
-            Workflow.user_id == "dev-user",
+            Workflow.user_id == user_id,
             WorkflowRun.created_at >= since_24h,
         )
     )
@@ -79,7 +72,7 @@ async def get_stats(db: DBDep):
         select(func.avg(WorkflowRun.duration_ms))
         .join(Workflow)
         .where(
-            Workflow.user_id == "dev-user",
+            Workflow.user_id == user_id,
             WorkflowRun.status == "success",
             WorkflowRun.duration_ms.isnot(None),
         )
@@ -99,7 +92,7 @@ async def get_stats(db: DBDep):
             ).label("successes"),
         )
         .join(WorkflowRun, WorkflowRun.workflow_id == Workflow.id, isouter=True)
-        .where(Workflow.user_id == "dev-user")
+        .where(Workflow.user_id == user_id)
         .group_by(Workflow.id, Workflow.name)
         .order_by(func.coalesce(func.sum(WorkflowRun.total_tokens), 0).desc())
         .limit(5)
@@ -129,11 +122,12 @@ async def get_stats(db: DBDep):
 
 
 @router.get("/runs-over-time")
-async def runs_over_time(db: DBDep, days: int = 7):
+async def runs_over_time(db: DBDep, current_user: CurrentUser, days: int = 7):
     """
     Daily run counts for the past N days, split by success/failed.
     Used to render the sparkline / bar chart on the dashboard.
     """
+    user_id = str(current_user.id)
     now = datetime.now(timezone.utc)
     since = now - timedelta(days=days)
 
@@ -145,7 +139,7 @@ async def runs_over_time(db: DBDep, days: int = 7):
         )
         .join(Workflow)
         .where(
-            Workflow.user_id == "dev-user",
+            Workflow.user_id == user_id,
             WorkflowRun.created_at >= since,
         )
         .group_by("day", WorkflowRun.status)

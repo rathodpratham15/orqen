@@ -6,19 +6,32 @@ import type {
   Workflow, WorkflowRun, ApprovalRequest,
   WorkflowDefinition, TriggerConfig, RunEvent,
   AnalyticsStats, DailyRuns,
+  AuthResponse, APIKeyStatus,
 } from "./types";
 
 const BASE = "/api";
-// SSE streams must go directly to the Railway backend — Vercel's serverless
-// rewrite closes long-lived connections before events arrive.
 const SSE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "") + "/api";
 
 async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  // Attach JWT from Zustand store (works outside React via .getState())
+  let authHeader: Record<string, string> = {};
+  try {
+    const { useAuthStore } = await import("@/stores/auth-store");
+    const token = useAuthStore.getState().token;
+    if (token) authHeader = { Authorization: `Bearer ${token}` };
+  } catch {
+    // During SSR or before store is hydrated, skip
+  }
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader,
+      ...options.headers,
+    },
     ...options,
   });
 
@@ -31,9 +44,41 @@ async function request<T>(
   return res.json();
 }
 
-// ─── Workflows ────────────────────────────────────────────────────────────────
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export const api = {
+  auth: {
+    register: (data: { email: string; password: string; name: string }) =>
+      request<AuthResponse>("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+
+    login: (data: { email: string; password: string }) =>
+      request<AuthResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+
+    me: () => request<{ id: string; email: string; name: string }>("/auth/me"),
+  },
+
+  settings: {
+    listAPIKeys: () =>
+      request<APIKeyStatus[]>("/settings/api-keys"),
+
+    setAPIKey: (provider: string, key: string) =>
+      request<APIKeyStatus>(`/settings/api-keys/${provider}`, {
+        method: "PUT",
+        body: JSON.stringify({ key }),
+      }),
+
+    deleteAPIKey: (provider: string) =>
+      request<void>(`/settings/api-keys/${provider}`, { method: "DELETE" }),
+  },
+
+  // ─── Workflows ───────────────────────────────────────────────────────────────
+
   workflows: {
     list: () =>
       request<Workflow[]>("/workflows"),
@@ -50,7 +95,6 @@ export const api = {
     delete: (id: string) =>
       request<void>(`/workflows/${id}`, { method: "DELETE" }),
 
-    // ─── Runs ──────────────────────────────────────────────────────────────
     triggerRun: (workflowId: string, triggerData: Record<string, unknown> = {}) =>
       request<WorkflowRun>(`/runs/${workflowId}/run`, {
         method: "POST",
@@ -67,10 +111,6 @@ export const api = {
     get: (id: string) =>
       request<WorkflowRun>(`/runs/${id}`),
 
-    /**
-     * Subscribe to live run events via Server-Sent Events.
-     * Calls onEvent for each event; resolves when the stream closes.
-     */
     stream: (runId: string, onEvent: (event: RunEvent) => void): EventSource => {
       const es = new EventSource(`${SSE_BASE}/runs/${runId}/stream`);
       es.onmessage = (e) => {
@@ -78,9 +118,7 @@ export const api = {
           const event: RunEvent = JSON.parse(e.data);
           onEvent(event);
           if (event.type === "stream_end") es.close();
-        } catch {
-          // ignore parse errors
-        }
+        } catch {}
       };
       return es;
     },

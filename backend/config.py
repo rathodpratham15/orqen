@@ -1,3 +1,6 @@
+import base64
+import hashlib
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,21 +16,49 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
 
-    # AI
+    # AI — server-level fallback keys (used when a user hasn't set their own)
     ANTHROPIC_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
 
-    # Auth
+    # Auth — JWT
+    APP_SECRET_KEY: str = "change-me"
+    # Optional: base64url-encoded 32-byte Fernet key.
+    # If empty, derived deterministically from APP_SECRET_KEY (fine for dev).
+    ENCRYPTION_KEY: str = ""
+
+    # Google OAuth 2.0 — get these from console.cloud.google.com
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    # Redirect URI registered in Google Cloud Console
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+    # Where to send the user after OAuth completes (frontend)
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # Legacy / unused
     CLERK_SECRET_KEY: str = ""
     CLERK_PUBLISHABLE_KEY: str = ""
 
     # App
     APP_ENV: str = "development"
-    APP_SECRET_KEY: str = "change-me"
     CORS_ORIGINS: str = "http://localhost:3000"
 
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",")]
+
+    @property
+    def fernet(self):
+        """Return a Fernet instance for encrypting/decrypting API keys."""
+        from cryptography.fernet import Fernet
+
+        key = self.ENCRYPTION_KEY
+        if not key:
+            # Derive a stable 32-byte key from APP_SECRET_KEY (dev convenience)
+            raw = hashlib.sha256(self.APP_SECRET_KEY.encode()).digest()
+            key = base64.urlsafe_b64encode(raw).decode()
+        return Fernet(key.encode())
 
 
 settings = Settings()
