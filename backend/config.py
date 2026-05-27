@@ -22,11 +22,19 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str = ""
     GROQ_API_KEY: str = ""
 
-    # Auth
+    # Auth — JWT
     APP_SECRET_KEY: str = "change-me"
     # Optional: base64url-encoded 32-byte Fernet key.
     # If empty, derived deterministically from APP_SECRET_KEY (fine for dev).
     ENCRYPTION_KEY: str = ""
+
+    # Google OAuth 2.0 — get these from console.cloud.google.com
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    # Redirect URI registered in Google Cloud Console
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+    # Where to send the user after OAuth completes (frontend)
+    FRONTEND_URL: str = "http://localhost:3000"
 
     # Legacy / unused
     CLERK_SECRET_KEY: str = ""
