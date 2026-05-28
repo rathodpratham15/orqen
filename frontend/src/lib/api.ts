@@ -7,6 +7,7 @@ import type {
   WorkflowDefinition, TriggerConfig, RunEvent,
   AnalyticsStats, DailyRuns,
   AuthResponse, APIKeyStatus,
+  WorkflowSchedule,
 } from "./types";
 
 const BASE = "/api";
@@ -144,5 +145,16 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ decision, comment }),
       }),
+  },
+
+  schedules: {
+    list: () =>
+      request<WorkflowSchedule[]>("/schedules"),
+
+    toggle: (id: string) =>
+      request<WorkflowSchedule>(`/schedules/${id}/toggle`, { method: "PATCH" }),
+
+    delete: (id: string) =>
+      request<void>(`/schedules/${id}`, { method: "DELETE" }),
   },
 };

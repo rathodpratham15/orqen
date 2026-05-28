@@ -108,8 +108,13 @@ export function NewWorkflowModal({ open, onOpenChange, onCreate }: NewWorkflowMo
               />
             )}
             {trigger === "webhook" && (
-              <div className="mt-2 rounded-md border border-[#2a2a40] bg-[#0a0a0f] p-2 font-mono text-xs text-slate-400">
-                POST https://orqen.app/hooks/&lt;workflow-id&gt;
+              <div className="mt-2 space-y-1.5">
+                <div className="rounded-md border border-[#2a2a40] bg-[#0a0a0f] p-2 font-mono text-xs text-slate-400 break-all">
+                  POST {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/webhooks/&lt;workflow-id&gt;
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  The workflow ID will appear after creation. Send any JSON body — it's accessible as <code className="text-violet-400">{"{{ trigger.body.field }}"}</code>
+                </p>
               </div>
             )}
           </div>

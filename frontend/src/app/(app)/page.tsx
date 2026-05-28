@@ -43,12 +43,15 @@ export default function DashboardPage() {
     });
   }, [workflows, query, filter]);
 
-  async function handleCreate(data: { name: string; description: string; trigger: "manual" | "cron" | "webhook" }) {
+  async function handleCreate(data: { name: string; description: string; trigger: "manual" | "cron" | "webhook"; cron_expr?: string }) {
     try {
       const wf = await api.workflows.create({
         name:           data.name,
         description:    data.description || undefined,
-        trigger_config: { type: data.trigger, config: {} },
+        trigger_config: {
+          type:   data.trigger,
+          config: data.trigger === "cron" && data.cron_expr ? { cron: data.cron_expr } : {},
+        },
       });
       toast.success("Workflow created", { description: wf.name });
       router.push(`/editor/${wf.id}`);

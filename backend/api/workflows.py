@@ -2,18 +2,28 @@
 Workflow CRUD endpoints.
 """
 import uuid
+from datetime import datetime, timezone
 from typing import Annotated
 
+from croniter import croniter as _croniter
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import CurrentUser, DBDep
 from database import get_db
-from models import Workflow
+from models import Workflow, WorkflowSchedule
 from schemas import WorkflowCreate, WorkflowUpdate, WorkflowResponse
 
 router = APIRouter()
+
+
+def _compute_next_run(cron_expr: str) -> datetime | None:
+    try:
+        now = datetime.now(timezone.utc)
+        return _croniter(cron_expr, now).get_next(datetime)
+    except Exception:
+        return None
 
 
 @router.post("", response_model=WorkflowResponse, status_code=status.HTTP_201_CREATED)
@@ -28,6 +38,19 @@ async def create_workflow(body: WorkflowCreate, current_user: CurrentUser, db: D
     db.add(workflow)
     await db.commit()
     await db.refresh(workflow)
+
+    if body.trigger_config.type == "cron":
+        cron_expr = body.trigger_config.config.get("cron", "0 9 * * *")
+        schedule = WorkflowSchedule(
+            workflow_id=workflow.id,
+            cron_expr=cron_expr,
+            timezone=body.trigger_config.config.get("timezone", "UTC"),
+            is_active=True,
+            next_run_at=_compute_next_run(cron_expr),
+        )
+        db.add(schedule)
+        await db.commit()
+
     return workflow
 
 
@@ -65,8 +88,40 @@ async def update_workflow(
         wf.definition = body.definition.model_dump()
     if body.trigger_config is not None:
         wf.trigger_config = body.trigger_config.model_dump()
+
+        # Sync schedule
+        existing = await db.execute(
+            select(WorkflowSchedule).where(WorkflowSchedule.workflow_id == workflow_id)
+        )
+        existing_schedule = existing.scalar_one_or_none()
+
+        if body.trigger_config.type == "cron":
+            cron_expr = body.trigger_config.config.get("cron", "0 9 * * *")
+            if existing_schedule:
+                existing_schedule.cron_expr = cron_expr
+                existing_schedule.timezone = body.trigger_config.config.get("timezone", "UTC")
+                existing_schedule.is_active = True
+                existing_schedule.next_run_at = _compute_next_run(cron_expr)
+            else:
+                db.add(WorkflowSchedule(
+                    workflow_id=wf.id,
+                    cron_expr=cron_expr,
+                    timezone=body.trigger_config.config.get("timezone", "UTC"),
+                    is_active=True,
+                    next_run_at=_compute_next_run(cron_expr),
+                ))
+        else:
+            if existing_schedule:
+                existing_schedule.is_active = False
+
     if body.is_active is not None:
         wf.is_active = body.is_active
+        if not body.is_active:
+            existing = await db.execute(
+                select(WorkflowSchedule).where(WorkflowSchedule.workflow_id == workflow_id)
+            )
+            if s := existing.scalar_one_or_none():
+                s.is_active = False
 
     await db.commit()
     await db.refresh(wf)

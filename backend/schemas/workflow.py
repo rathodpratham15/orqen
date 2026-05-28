@@ -139,3 +139,16 @@ class ApprovalRequestResponse(BaseModel):
 class ResolveApprovalRequest(BaseModel):
     decision: Literal["approved", "rejected"]
     comment: str | None = None
+
+
+class WorkflowScheduleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    workflow_id: uuid.UUID
+    workflow_name: str = ""
+    cron_expr: str
+    timezone: str
+    is_active: bool
+    last_run_at: datetime | None
+    next_run_at: datetime | None
+    created_at: datetime
