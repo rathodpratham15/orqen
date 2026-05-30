@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const NAV = [
-  { href: "/",          icon: Layers,      label: "Workflows",    testid: "nav-workflows" },
+  { href: "/dashboard", icon: Layers,      label: "Workflows",    testid: "nav-workflows" },
   { href: "/runs",      icon: Play,        label: "Runs",         testid: "nav-runs"      },
   { href: "/approvals", icon: CheckSquare, label: "Approvals",    testid: "nav-approvals" },
   { href: "/schedules", icon: Calendar,    label: "Schedules",    testid: "nav-schedules" },
@@ -45,7 +45,7 @@ export function Sidebar() {
 
         <TooltipProvider delayDuration={120}>
           {NAV.map(({ href, icon: Icon, label, testid }) => {
-            const active = href === "/" ? path === "/" : path.startsWith(href);
+            const active = path === href || (href !== "/dashboard" && path.startsWith(href));
             return (
               <Tooltip key={href}>
                 <TooltipTrigger asChild>

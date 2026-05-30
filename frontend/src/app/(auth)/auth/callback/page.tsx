@@ -47,7 +47,7 @@ function CallbackInner() {
       api.auth.me()
         .then((user) => {
           setAuth(token, user);
-          router.replace("/");
+          router.replace("/dashboard");
         })
         .catch(() => {
           // Fallback: decode JWT payload for minimal user info
@@ -58,7 +58,7 @@ function CallbackInner() {
               email: payload.email ?? "",
               name:  payload.name ?? "User",
             });
-            router.replace("/");
+            router.replace("/dashboard");
           } catch {
             setErr("Failed to validate token. Please try logging in again.");
           }
