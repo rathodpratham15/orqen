@@ -10,14 +10,11 @@ import {
   Workflow,
   ArrowRight,
   Check,
-  Github,
-  Twitter,
   Layers,
   CheckCircle2,
   Activity,
   Sparkles,
   CornerDownRight,
-  Terminal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -30,12 +27,9 @@ export default function Marketing() {
 
       <NavBar />
       <Hero />
-      <LogoStrip />
       <Features />
       <HowItWorks />
       <ShowcaseBlock />
-      <Stats />
-      <Pricing />
       <CTA />
       <Footer />
     </div>
@@ -55,7 +49,6 @@ function NavBar() {
       <nav className="hidden md:flex items-center gap-8 text-sm text-slate-400">
         <a href="#features" className="hover:text-slate-200">Features</a>
         <a href="#how" className="hover:text-slate-200">How it works</a>
-        <a href="#pricing" className="hover:text-slate-200">Pricing</a>
         <a href="https://docs.orqen.dev" className="hover:text-slate-200">Docs</a>
       </nav>
       <div className="flex items-center gap-2">
@@ -109,14 +102,6 @@ function Hero() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="border-border bg-transparent text-slate-200 hover:bg-white/5 gap-2 h-11 px-5 text-[15px]"
-              data-testid="hero-cta-secondary"
-            >
-              <Terminal className="h-4 w-4" />
-              View live demo
-            </Button>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-500">
@@ -207,7 +192,7 @@ function HeroGraph() {
         </div>
       </div>
 
-      {/* Floating chips */}
+      {/* Floating chips
       <div className="absolute -left-4 top-8 rotate-[-6deg] hidden md:flex items-center gap-1.5 rounded-md border border-violet-500/30 bg-[#0d0d14] px-2.5 py-1.5 text-xs text-violet-200 shadow-xl">
         <Sparkles className="h-3.5 w-3.5" />
         claude-sonnet-4-6
@@ -215,7 +200,7 @@ function HeroGraph() {
       <div className="absolute -right-3 -bottom-3 rotate-[4deg] hidden md:flex items-center gap-1.5 rounded-md border border-cyan-500/30 bg-[#0d0d14] px-2.5 py-1.5 text-xs text-cyan-200 shadow-xl">
         <Activity className="h-3.5 w-3.5" />
         Live SSE stream
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -250,29 +235,6 @@ function MiniNode({ style, color, type, label, status, small }: MiniNodeProps) {
       </div>
       <div className="px-2 py-1.5 text-[11px] font-semibold text-slate-100 truncate">{label}</div>
     </div>
-  );
-}
-
-/* ----------------- Logo strip ----------------- */
-function LogoStrip() {
-  const logos = ["Linear", "Notion", "Vercel", "Anthropic", "OpenAI", "Stripe", "Cloudflare", "Modal"];
-  return (
-    <section className="relative z-10 border-y border-border bg-[#0c0c14]/60 backdrop-blur">
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-slate-500">
-          Trusted by builders shipping AI in production
-        </p>
-        <div className="mt-5 overflow-hidden">
-          <div className="marquee-track flex w-max items-center gap-12 whitespace-nowrap">
-            {[...logos, ...logos].map((l, i) => (
-              <span key={i} className="font-display text-2xl font-semibold tracking-tight text-slate-600">
-                {l}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -501,139 +463,6 @@ function ShowcaseBlock() {
   );
 }
 
-/* ----------------- Stats ----------------- */
-function Stats() {
-  return (
-    <section className="relative z-10 border-y border-border bg-gradient-to-b from-[#0b0b12] to-[#0a0a0f]">
-      <div className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border rounded-xl overflow-hidden border border-border">
-          {[
-            { v: "4.2M", l: "Workflow runs / week" },
-            { v: "180+", l: "Integration nodes" },
-            { v: "99.98%", l: "Engine uptime" },
-            { v: "<40ms", l: "Median edge latency" },
-          ].map((s) => (
-            <div key={s.l} className="bg-[#0b0b12] p-8 text-center">
-              <div className="font-display text-4xl md:text-5xl font-semibold tracking-tight text-slate-100">
-                {s.v}
-              </div>
-              <div className="mt-2 text-xs uppercase tracking-wider text-slate-500">{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ----------------- Pricing ----------------- */
-const TIERS = [
-  {
-    name: "Hobby",
-    price: "$0",
-    cadence: "forever",
-    desc: "For tinkering and side-projects.",
-    features: [
-      "1,000 runs / month",
-      "Unlimited workflows",
-      "Community support",
-      "All core nodes",
-    ],
-    cta: "Start free",
-    highlight: false,
-  },
-  {
-    name: "Team",
-    price: "$49",
-    cadence: "per seat / month",
-    desc: "For teams shipping AI to production.",
-    features: [
-      "100,000 runs / month",
-      "Approval workflows",
-      "Audit log + RBAC",
-      "Priority support",
-      "Slack & PagerDuty alerts",
-    ],
-    cta: "Start 14-day trial",
-    highlight: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    cadence: "self-host or VPC",
-    desc: "For regulated industries at scale.",
-    features: [
-      "Unlimited runs",
-      "Bring your own LLM keys",
-      "SAML SSO + SCIM",
-      "SOC 2 Type II report",
-      "Dedicated solutions engineer",
-    ],
-    cta: "Talk to sales",
-    highlight: false,
-  },
-];
-
-function Pricing() {
-  return (
-    <section id="pricing" className="relative z-10 mx-auto max-w-7xl px-6 py-24">
-      <div className="max-w-2xl">
-        <div className="text-[11px] uppercase tracking-[0.2em] text-violet-400">Pricing</div>
-        <h2 className="font-display mt-3 text-4xl md:text-5xl font-semibold tracking-tight">
-          Fair, transparent, usage-based.
-        </h2>
-        <p className="mt-4 text-slate-400">
-          Pay for the runs you ship, not the seats you buy. Start free — upgrade
-          when you outgrow it.
-        </p>
-      </div>
-
-      <div className="mt-12 grid md:grid-cols-3 gap-4">
-        {TIERS.map((t) => (
-          <div
-            key={t.name}
-            data-testid={`pricing-${t.name.toLowerCase()}`}
-            className={`relative rounded-xl border p-7 ${
-              t.highlight
-                ? "border-violet-500/50 bg-gradient-to-b from-violet-600/[0.08] to-transparent shadow-2xl shadow-violet-900/20"
-                : "border-border bg-[#12121A]"
-            }`}
-          >
-            {t.highlight && (
-              <span className="absolute -top-2.5 left-7 rounded-full border border-violet-500/40 bg-[#0a0a0f] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-300">
-                Most popular
-              </span>
-            )}
-            <h3 className="font-display text-2xl font-semibold tracking-tight">{t.name}</h3>
-            <div className="mt-4 flex items-baseline gap-1.5">
-              <span className="font-display text-5xl font-semibold">{t.price}</span>
-              <span className="text-xs text-slate-500">/ {t.cadence}</span>
-            </div>
-            <p className="mt-2 text-sm text-slate-400">{t.desc}</p>
-            <Button
-              className={`mt-6 w-full ${
-                t.highlight
-                  ? "bg-violet-600 hover:bg-violet-500"
-                  : "bg-transparent border border-border hover:bg-white/5 text-slate-100"
-              }`}
-            >
-              {t.cta}
-            </Button>
-            <ul className="mt-6 space-y-2.5 border-t border-border pt-5">
-              {t.features.map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
-                  <Check className="mt-0.5 h-4 w-4 text-emerald-400 shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 /* ----------------- Final CTA ----------------- */
 function CTA() {
   return (
@@ -655,13 +484,6 @@ function CTA() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="border-border bg-transparent text-slate-200 hover:bg-white/5 gap-2 h-11 px-6 text-[15px]"
-            >
-              <Github className="h-4 w-4" />
-              Star on GitHub
-            </Button>
           </div>
         </div>
       </div>
@@ -673,63 +495,25 @@ function CTA() {
 function Footer() {
   return (
     <footer className="relative z-10 border-t border-border">
-      <div className="mx-auto max-w-7xl px-6 py-12">
-        <div className="grid md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-8">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-violet-700">
-                <span className="text-sm font-bold text-white">O</span>
-              </div>
-              <span className="font-display text-xl font-semibold tracking-tight">Orqen</span>
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-violet-700">
+              <span className="text-sm font-bold text-white">O</span>
             </div>
-            <p className="mt-3 max-w-xs text-sm text-slate-500">
-              The operating system for multi-agent AI pipelines.
-            </p>
-            <div className="mt-4 flex items-center gap-2 text-slate-500">
-              <a href="#" className="rounded p-1.5 hover:bg-white/5 hover:text-slate-200"><Twitter className="h-4 w-4" /></a>
-              <a href="#" className="rounded p-1.5 hover:bg-white/5 hover:text-slate-200"><Github className="h-4 w-4" /></a>
-            </div>
+            <span className="font-display text-xl font-semibold tracking-tight">Orqen</span>
           </div>
-
-          <FooterCol
-            title="Product"
-            links={["Features", "Pricing", "Integrations", "Changelog", "Roadmap"]}
-          />
-          <FooterCol
-            title="Resources"
-            links={["Docs", "Templates", "Blog", "Community", "Status"]}
-          />
-          <FooterCol
-            title="Company"
-            links={["About", "Customers", "Careers", "Privacy", "Terms"]}
-          />
+          <nav className="flex items-center gap-6 text-sm text-slate-400">
+            <a href="#features" className="hover:text-slate-200">Features</a>
+            <a href="#how" className="hover:text-slate-200">How it works</a>
+            <a href="https://docs.orqen.dev" className="hover:text-slate-200">Docs</a>
+            <Link href="/dashboard" className="hover:text-slate-200">Open app</Link>
+          </nav>
         </div>
-
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6 text-xs text-slate-600">
-          <div>© 2026 Orqen Labs, Inc. All rights reserved.</div>
-          <div className="font-mono">SOC 2 Type II · GDPR · CCPA</div>
+        <div className="mt-8 border-t border-border pt-6 text-xs text-slate-600">
+          © 2026 Orqen Labs, Inc. All rights reserved.
         </div>
       </div>
     </footer>
-  );
-}
-
-interface FooterColProps {
-  title: string;
-  links: string[];
-}
-
-function FooterCol({ title, links }: FooterColProps) {
-  return (
-    <div>
-      <h4 className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{title}</h4>
-      <ul className="mt-3 space-y-2 text-sm">
-        {links.map((l) => (
-          <li key={l}>
-            <a href="#" className="text-slate-400 hover:text-slate-200">{l}</a>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
