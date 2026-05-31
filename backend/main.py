@@ -14,6 +14,8 @@ from api.approvals import router as approvals_router
 from api.analytics import router as analytics_router
 from api.auth import router as auth_router
 from api.settings import router as settings_router
+from api.webhooks import router as webhooks_router
+from api.schedules import router as schedules_router
 
 
 @asynccontextmanager
@@ -49,6 +51,8 @@ app.include_router(workflows_router, prefix="/api/workflows",  tags=["Workflows"
 app.include_router(runs_router,      prefix="/api/runs",       tags=["Runs"])
 app.include_router(approvals_router, prefix="/api/approvals",  tags=["Approvals"])
 app.include_router(analytics_router, prefix="/api/analytics",  tags=["Analytics"])
+app.include_router(webhooks_router,  prefix="/api/webhooks",  tags=["Webhooks"])
+app.include_router(schedules_router, prefix="/api/schedules", tags=["Schedules"])
 
 
 @app.get("/health")

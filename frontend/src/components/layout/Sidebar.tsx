@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Layers, Play, CheckSquare, BarChart2, Settings, LogOut } from "lucide-react";
+import { Layers, Play, CheckSquare, BarChart2, Settings, LogOut, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import {
@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/tooltip";
 
 const NAV = [
-  { href: "/",          icon: Layers,      label: "Workflows",    testid: "nav-workflows" },
+  { href: "/dashboard", icon: Layers,      label: "Workflows",    testid: "nav-workflows" },
   { href: "/runs",      icon: Play,        label: "Runs",         testid: "nav-runs"      },
   { href: "/approvals", icon: CheckSquare, label: "Approvals",    testid: "nav-approvals" },
+  { href: "/schedules", icon: Calendar,    label: "Schedules",    testid: "nav-schedules" },
   { href: "/analytics", icon: BarChart2,   label: "Observability",testid: "nav-analytics" },
   { href: "/settings",  icon: Settings,    label: "Settings",     testid: "nav-settings"  },
 ];
@@ -44,7 +45,7 @@ export function Sidebar() {
 
         <TooltipProvider delayDuration={120}>
           {NAV.map(({ href, icon: Icon, label, testid }) => {
-            const active = href === "/" ? path === "/" : path.startsWith(href);
+            const active = path === href || (href !== "/dashboard" && path.startsWith(href));
             return (
               <Tooltip key={href}>
                 <TooltipTrigger asChild>

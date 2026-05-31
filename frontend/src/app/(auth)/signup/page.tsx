@@ -41,7 +41,7 @@ export default function SignupPage() {
     try {
       const res = await api.auth.register({ name, email, password });
       setAuth(res.token, res.user);
-      router.replace("/");
+      router.replace("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

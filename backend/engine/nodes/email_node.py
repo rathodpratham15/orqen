@@ -40,7 +40,8 @@ class EmailNode(BaseNode):
     node_type = "email"
 
     async def execute(self, config: dict[str, Any], context) -> NodeResult:
-        api_key    = config.get("api_key") or os.environ.get("RESEND_API_KEY", "")
+        from config import settings as _settings
+        api_key    = config.get("api_key") or _settings.RESEND_API_KEY or os.environ.get("RESEND_API_KEY", "")
         to         = config.get("to", "")
         subject    = config.get("subject", "")
         body       = config.get("body", "")

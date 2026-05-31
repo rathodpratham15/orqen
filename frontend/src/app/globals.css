@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ── Google Fonts ─────────────────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap");
 
 /* ── CSS Variables (dark theme) ───────────────────────────────────────────── */
 :root {
@@ -37,6 +37,42 @@ body {
   color: #F1F5F9;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ── Marketing typography ────────────────────────────────────────────────── */
+.font-display {
+  font-family: "Bricolage Grotesque", "Inter", sans-serif;
+  letter-spacing: -0.02em;
+}
+.font-serif-accent {
+  font-family: "Instrument Serif", "Georgia", serif;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+
+/* Grain overlay for marketing CTA block */
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.5;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Marquee for logo strip */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 28s linear infinite;
+}
+
+/* Soft violet glow for hero card */
+.glow-violet {
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.25), 0 24px 80px -10px rgba(124, 58, 237, 0.35);
 }
 
 /* ── Animations ──────────────────────────────────────────────────────────── */

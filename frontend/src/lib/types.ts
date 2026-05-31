@@ -199,3 +199,17 @@ export type RunEvent =
   | { type: "run_failed";    error: string }
   | { type: "run_completed"; total_tokens: number; cost_usd: number; duration_ms: number }
   | { type: "stream_end" };
+
+// ─── Schedules ────────────────────────────────────────────────────────────────
+
+export interface WorkflowSchedule {
+  id:            string;
+  workflow_id:   string;
+  workflow_name: string;
+  cron_expr:     string;
+  timezone:      string;
+  is_active:     boolean;
+  last_run_at:   string | null;
+  next_run_at:   string | null;
+  created_at:    string;
+}

@@ -362,6 +362,28 @@ async def _execute_run(run_id: str, resume_from: str | None) -> None:
             "duration_ms":  run.duration_ms,
         })
 
+        # Fire completion notification (non-blocking, failures are swallowed)
+        try:
+            from services.notifications import notify_run_finished
+            from models.user import User as _User
+            wf_obj = await session.get(Workflow, run.workflow_id)
+            if wf_obj:
+                user_obj = await session.get(_User, __import__("uuid").UUID(wf_obj.user_id))
+                if user_obj:
+                    await notify_run_finished(
+                        user_email=user_obj.email,
+                        user_name=user_obj.name,
+                        workflow_name=wf_obj.name,
+                        run_id=run_id,
+                        status="success",
+                        duration_ms=run.duration_ms,
+                        total_tokens=run.total_tokens,
+                        estimated_cost_usd=float(run.estimated_cost_usd or 0),
+                        error=None,
+                    )
+        except Exception:
+            pass
+
 
 async def _fail_run(session, run: WorkflowRun, error: str) -> None:
     run.status      = "failed"
@@ -372,6 +394,29 @@ async def _fail_run(session, run: WorkflowRun, error: str) -> None:
             (run.finished_at - run.started_at).total_seconds() * 1000
         )
     await session.commit()
+
+    try:
+        from services.notifications import notify_run_finished
+        from models.user import User as _User
+        from sqlalchemy import select as _select
+        wf_result = await session.execute(_select(Workflow).where(Workflow.id == run.workflow_id))
+        wf_obj = wf_result.scalar_one_or_none()
+        if wf_obj:
+            user_obj = await session.get(_User, __import__("uuid").UUID(wf_obj.user_id))
+            if user_obj:
+                await notify_run_finished(
+                    user_email=user_obj.email,
+                    user_name=user_obj.name,
+                    workflow_name=wf_obj.name,
+                    run_id=str(run.id),
+                    status="failed",
+                    duration_ms=run.duration_ms,
+                    total_tokens=run.total_tokens,
+                    estimated_cost_usd=float(run.estimated_cost_usd or 0),
+                    error=error,
+                )
+    except Exception:
+        pass
 
 
 # ─── Scheduler poller ─────────────────────────────────────────────────────────
