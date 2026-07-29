@@ -19,8 +19,6 @@ function GoogleIcon() {
   );
 }
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export default function LoginPage() {
   const router  = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -67,7 +65,7 @@ export default function LoginPage() {
 
         {/* Google OAuth button */}
         <a
-          href={`${BACKEND}/api/auth/google`}
+          href="/api/auth/google"
           className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-[#2a2a40] bg-[#1a1a2e] px-4 py-2.5 text-sm font-medium text-slate-200 hover:bg-[#22223a] hover:border-[#3a3a55] transition-colors"
         >
           <GoogleIcon />
