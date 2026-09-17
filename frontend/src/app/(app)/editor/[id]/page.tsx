@@ -55,7 +55,7 @@ export default function EditorPage() {
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 py-2.5 bg-[#0d0d14] border-b border-[#1a1a28] flex-shrink-0">
         <Link
-          href="/"
+          href="/dashboard"
           className="text-zinc-600 hover:text-zinc-300 transition-colors"
         >
           <ArrowLeft size={16} />
