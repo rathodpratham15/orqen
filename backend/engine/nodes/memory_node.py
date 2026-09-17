@@ -30,7 +30,7 @@ from typing import Any
 
 from sqlalchemy import select, text
 
-from database import async_session_factory
+from database import worker_session_factory
 from models import AgentMemory
 from .base import BaseNode, NodeResult
 
@@ -115,15 +115,15 @@ async def _semantic_search(
     except Exception as exc:
         return [{"error": f"Embedding failed: {exc}"}]
 
-    async with async_session_factory() as session:
+    async with worker_session_factory()() as session:
         # pgvector cosine distance operator: <=>
         result = await session.execute(
             text("""
                 SELECT id, content, collection, metadata,
-                       (embedding <=> :emb::vector) AS score
+                       (embedding <=> CAST(:emb AS vector)) AS score
                 FROM agent_memories
                 WHERE collection = :col
-                ORDER BY embedding <=> :emb::vector
+                ORDER BY embedding <=> CAST(:emb AS vector)
                 LIMIT :k
             """),
             {
@@ -199,7 +199,7 @@ class MemoryNode(BaseNode):
         )
 
         try:
-            async with async_session_factory() as session:
+            async with worker_session_factory()() as session:
                 session.add(memory)
                 await session.commit()
         except Exception as exc:
