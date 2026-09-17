@@ -73,7 +73,10 @@ async def _get_model():
 
 def _load_model_sync():
     from sentence_transformers import SentenceTransformer
-    return SentenceTransformer("all-MiniLM-L6-v2")
+    # device="cpu": avoids touching Metal/MPS on Apple Silicon, which crashes
+    # (SIGABRT) when initialized inside a Celery prefork child process — the
+    # ObjC runtime aborts if a Metal init was in flight across fork().
+    return SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
 
 # Zero vector fallback when sentence-transformers is unavailable
